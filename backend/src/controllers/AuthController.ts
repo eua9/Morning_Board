@@ -11,8 +11,15 @@
  */
 
 import { Request, Response } from 'express';
-// TODO: Use User model when implementing authentication
-// import { User } from '../models/User';
+import { User } from '../models/User';
+import { getDatabase } from '../config/database';
+import {
+  generateTokenPair,
+  generateAccessToken,
+  verifyToken,
+  isTokenExpired,
+  TokenPayload,
+} from '../utils/jwt';
 
 export class AuthController {
   /**
@@ -57,36 +64,119 @@ export class AuthController {
 
   /**
    * Authenticate user and return token
-   * @param req - Express request object containing email and password
+   * @param req - Express request object containing username/email and password
    * @param res - Express response object
    * @returns JSON response with user data and token
    */
   static async login(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement user login
-      // 1. Validate request data (email, password)
-      // 2. Find user by email
-      // 3. Compare provided password with stored hash
-      // 4. Generate JWT token
-      // 5. Return user data and token (exclude password)
+      // 1. Validate request data
+      const { email: identifier, password } = req.body;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { email: _email, password: _password } = req.body;
+      if (!identifier || !password) {
+        res.status(400).json({
+          message: 'Login failed',
+          error: 'Username/email and password are required',
+        });
+        return;
+      }
 
-      // Placeholder response
+      if (typeof identifier !== 'string' || typeof password !== 'string') {
+        res.status(400).json({
+          message: 'Login failed',
+          error: 'Invalid input format',
+        });
+        return;
+      }
+
+      // 2. Find user by username or email
+      const db = getDatabase();
+
+      // Try username first, then email
+      let userRow = db
+        .prepare('SELECT * FROM users WHERE username = ?')
+        .get(identifier) as
+        | {
+            id: string;
+            username: string;
+            email: string;
+            password: string;
+            first_name: string;
+            last_name: string;
+            created_at: string;
+            updated_at: string;
+          }
+        | undefined;
+
+      // If not found by username, try email
+      if (!userRow) {
+        userRow = db
+          .prepare('SELECT * FROM users WHERE email = ?')
+          .get(identifier) as typeof userRow;
+      }
+
+      if (!userRow) {
+        res.status(401).json({
+          message: 'Login failed',
+          error: 'User not found',
+        });
+        return;
+      }
+
+      // 3. Create User instance from database row
+      const user = new User({
+        id: userRow.id,
+        username: userRow.username,
+        email: userRow.email,
+        password: userRow.password,
+        firstName: userRow.first_name,
+        lastName: userRow.last_name,
+        createdAt: new Date(userRow.created_at),
+        updatedAt: new Date(userRow.updated_at),
+      });
+
+      // 4. Authenticate password using User model's authenticate method
+      const isAuthenticated = await user.authenticate(password);
+
+      if (!isAuthenticated) {
+        res.status(401).json({
+          message: 'Login failed',
+          error: 'Invalid password',
+        });
+        return;
+      }
+
+      // 5. Generate JWT token pair (access + refresh tokens)
+      const tokenPayload: TokenPayload = {
+        userId: user.id,
+        email: user.email,
+        username: user.username,
+      };
+
+      const tokens = generateTokenPair(tokenPayload);
+
+      // 6. Return user data and tokens (exclude password)
       res.status(200).json({
         message: 'Login successful',
         user: {
-          id: 'placeholder-id',
-          email: _email || 'placeholder@example.com',
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
         },
-        token: 'placeholder-token',
+        token: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiresIn: tokens.expiresIn,
       });
     } catch (error) {
-      // TODO: Handle errors appropriately
-      res.status(401).json({
+      console.error('Login error:', error);
+      res.status(500).json({
         message: 'Login failed',
-        error: error instanceof Error ? error.message : 'Invalid credentials',
+        error:
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       });
     }
   }
@@ -193,24 +283,66 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response with user data if token is valid
    */
-  static async verifyToken(_req: Request, res: Response): Promise<void> {
+  static async verifyToken(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement token verification
       // 1. Extract token from request headers
-      // 2. Verify JWT token signature
-      // 3. Check if token is expired
-      // 4. Check if token is in blacklist (if implementing logout)
-      // 5. Return user data if valid
+      const authHeader = req.headers.authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.status(401).json({
+          message: 'Token verification failed',
+          error: 'No token provided',
+        });
+        return;
+      }
 
-      // Placeholder response
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+
+      // 2. Verify JWT token signature and expiration
+      const payload = verifyToken(token);
+
+      if (!payload) {
+        res.status(401).json({
+          message: 'Token verification failed',
+          error: 'Invalid or expired token',
+        });
+        return;
+      }
+
+      // 3. Get user data from database
+      const db = getDatabase();
+      const userRow = db
+        .prepare('SELECT * FROM users WHERE id = ?')
+        .get(payload.userId) as
+        | {
+            id: string;
+            username: string;
+            email: string;
+            first_name: string;
+            last_name: string;
+          }
+        | undefined;
+
+      if (!userRow) {
+        res.status(401).json({
+          message: 'Token verification failed',
+          error: 'User not found',
+        });
+        return;
+      }
+
+      // 4. Return user data if valid
       res.status(200).json({
         message: 'Token is valid',
         user: {
-          id: 'placeholder-id',
+          id: userRow.id,
+          email: userRow.email,
+          username: userRow.username,
+          firstName: userRow.first_name,
+          lastName: userRow.last_name,
         },
       });
     } catch (error) {
-      // TODO: Handle errors appropriately
+      console.error('Token verification error:', error);
       res.status(401).json({
         message: 'Token verification failed',
         error: error instanceof Error ? error.message : 'Invalid token',
@@ -224,21 +356,58 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response with new access token
    */
-  static async refreshToken(_req: Request, res: Response): Promise<void> {
+  static async refreshToken(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement token refresh
-      // 1. Extract refresh token from request
-      // 2. Verify refresh token
-      // 3. Generate new access token
-      // 4. Return new token
+      // 1. Extract refresh token from request body
+      const { refreshToken } = req.body;
 
-      // Placeholder response
+      if (!refreshToken) {
+        res.status(400).json({
+          message: 'Token refresh failed',
+          error: 'Refresh token is required',
+        });
+        return;
+      }
+
+      // 2. Verify refresh token
+      const payload = verifyToken(refreshToken);
+
+      if (!payload || isTokenExpired(refreshToken)) {
+        res.status(401).json({
+          message: 'Token refresh failed',
+          error: 'Invalid or expired refresh token',
+        });
+        return;
+      }
+
+      // 3. Verify user still exists
+      const db = getDatabase();
+      const userRow = db
+        .prepare('SELECT id FROM users WHERE id = ?')
+        .get(payload.userId) as { id: string } | undefined;
+
+      if (!userRow) {
+        res.status(401).json({
+          message: 'Token refresh failed',
+          error: 'User not found',
+        });
+        return;
+      }
+
+      // 4. Generate new access token
+      const newAccessToken = generateAccessToken({
+        userId: payload.userId,
+        email: payload.email,
+        username: payload.username,
+      });
+
+      // 5. Return new token
       res.status(200).json({
         message: 'Token refreshed successfully',
-        token: 'new-placeholder-token',
+        token: newAccessToken,
       });
     } catch (error) {
-      // TODO: Handle errors appropriately
+      console.error('Token refresh error:', error);
       res.status(401).json({
         message: 'Token refresh failed',
         error: error instanceof Error ? error.message : 'Invalid refresh token',

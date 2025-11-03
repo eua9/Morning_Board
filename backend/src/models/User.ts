@@ -4,6 +4,7 @@
  * 
  * Properties:
  * - id: Unique identifier
+ * - username: Unique username
  * - email: User email address
  * - password: Hashed password (should never be returned in API responses)
  * - firstName: User's first name
@@ -12,10 +13,13 @@
  * - updatedAt: Last update timestamp
  */
 
+import bcrypt from 'bcrypt';
+
 export interface IUser {
   id: string;
+  username: string;
   email: string;
-  password: string; // Hashed password
+  password: string; // Hashed password (bcrypt hash)
   firstName: string;
   lastName: string;
   createdAt: Date;
@@ -24,6 +28,7 @@ export interface IUser {
 
 export class User implements IUser {
   id: string;
+  username: string;
   email: string;
   password: string;
   firstName: string;
@@ -33,6 +38,7 @@ export class User implements IUser {
 
   constructor(data: Partial<IUser>) {
     this.id = data.id || '';
+    this.username = data.username || '';
     this.email = data.email || '';
     this.password = data.password || '';
     this.firstName = data.firstName || '';
@@ -91,6 +97,7 @@ export class User implements IUser {
     // - Check password strength
     // - Validate required fields
     return !!(
+      this.username &&
       this.email &&
       this.password &&
       this.firstName &&
@@ -99,18 +106,35 @@ export class User implements IUser {
   }
 
   /**
-   * Hash password (should use bcrypt or similar)
-   * @param plainPassword - Plain text password
-   * @returns Hashed password
+   * Authenticate user by comparing plain password with stored hash
+   * @param plainPassword - Plain text password to authenticate
+   * @returns Promise resolving to true if password matches, false otherwise
    */
-  static async hashPassword(plainPassword: string): Promise<string> {
-    // TODO: Implement password hashing using bcrypt
-    // Example: return await bcrypt.hash(plainPassword, 10);
-    return Promise.resolve(plainPassword); // Placeholder
+  async authenticate(plainPassword: string): Promise<boolean> {
+    if (!plainPassword || !this.password) {
+      return false;
+    }
+    return User.comparePassword(plainPassword, this.password);
   }
 
   /**
-   * Compare password with hashed password
+   * Hash password using bcrypt
+   * @param plainPassword - Plain text password
+   * @param saltRounds - Number of salt rounds (default: 10)
+   * @returns Hashed password
+   */
+  static async hashPassword(
+    plainPassword: string,
+    saltRounds: number = 10
+  ): Promise<string> {
+    if (!plainPassword) {
+      throw new Error('Password cannot be empty');
+    }
+    return bcrypt.hash(plainPassword, saltRounds);
+  }
+
+  /**
+   * Compare plain password with hashed password using bcrypt
    * @param plainPassword - Plain text password to compare
    * @param hashedPassword - Hashed password to compare against
    * @returns true if passwords match, false otherwise
@@ -119,9 +143,15 @@ export class User implements IUser {
     plainPassword: string,
     hashedPassword: string
   ): Promise<boolean> {
-    // TODO: Implement password comparison using bcrypt
-    // Example: return await bcrypt.compare(plainPassword, hashedPassword);
-    return plainPassword === hashedPassword; // Placeholder
+    if (!plainPassword || !hashedPassword) {
+      return false;
+    }
+    try {
+      return await bcrypt.compare(plainPassword, hashedPassword);
+    } catch (error) {
+      console.error('Error comparing passwords:', error);
+      return false;
+    }
   }
 
   /**
@@ -143,6 +173,32 @@ export class User implements IUser {
   static async findByEmail(_email: string): Promise<User | null> {
     // TODO: Implement database lookup
     // This should query the database for a user with the given email
+    return null;
+  }
+
+  /**
+   * Find user by username
+   * @param _username - Username
+   * @returns User instance or null if not found
+   */
+  static async findByUsername(_username: string): Promise<User | null> {
+    // TODO: Implement database lookup
+    // This should query the database for a user with the given username
+    return null;
+  }
+
+  /**
+   * Find user by username or email (for login flexibility)
+   * @param _identifier - Username or email
+   * @returns User instance or null if not found
+   */
+  static async findByUsernameOrEmail(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _identifier: string
+  ): Promise<User | null> {
+    // TODO: Implement database lookup
+    // This should query the database for a user with the given username or email
+    // Try username first, then email
     return null;
   }
 
