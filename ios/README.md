@@ -2,6 +2,17 @@
 
 Native iOS application built with SwiftUI.
 
+## Style Guide
+
+For design consistency, refer to the [Style Guide](STYLE_GUIDE.md) which includes:
+- Color palette and semantic colors
+- Typography system
+- Spacing guidelines
+- Reusable UI component patterns
+- Button styles and widget containers
+
+Style constants are available in `MorningBoard/Utils/AppStyle.swift` for use throughout the app.
+
 ## Project Structure
 
 ```
