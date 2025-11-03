@@ -53,5 +53,16 @@ declare module "react-native" {
   export const Platform: {
     OS: "ios" | "android" | "web";
   };
+  export const Alert: {
+    alert: (
+      title: string,
+      message?: string,
+      buttons?: Array<{
+        text?: string;
+        onPress?: () => void;
+        style?: "default" | "cancel" | "destructive";
+      }>
+    ) => void;
+  };
 }
 
