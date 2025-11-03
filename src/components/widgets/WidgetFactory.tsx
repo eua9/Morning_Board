@@ -90,9 +90,9 @@ export const renderWidget = (
         title={widget.title}
         subtitle={`Unknown widget type: ${widget.type}`}
       >
-        <React.Fragment>
-          <p>Widget type "{widget.type}" is not yet implemented.</p>
-        </React.Fragment>
+        <Text style={{ color: "#8E8E93", fontSize: 15 }}>
+          Widget type "{widget.type}" is not yet implemented.
+        </Text>
       </WidgetView>
     );
   }
