@@ -13,6 +13,7 @@ import {
   RefreshControl,
   Dimensions,
   Platform,
+  TouchableOpacity,
 } from "react-native";
 import {
   getWidgetWidth,
@@ -23,6 +24,7 @@ import {
   isLargeScreen,
 } from "../utils/dimensions";
 import WidgetView from "../components/WidgetView";
+import { useAuth } from "../services/authContext";
 
 // Widget types from backend
 export type WidgetType = "weather" | "slack" | "canvas" | "bank" | "crm";
@@ -83,8 +85,14 @@ const getTimeOfDayGreeting = (): string => {
 };
 
 const DashboardScreen: React.FC<DashboardScreenProps> = () => {
+  const { logout } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [screenWidth, setScreenWidth] = useState<number>(SCREEN_WIDTH);
+
+  // Handle logout
+  const handleLogout = async () => {
+    await logout();
+  };
 
   // Handle screen rotation/resize
   useEffect(() => {
@@ -122,8 +130,20 @@ const DashboardScreen: React.FC<DashboardScreenProps> = () => {
     <View style={styles.container}>
       {/* Dashboard Header */}
       <View style={[styles.header, { paddingTop: safeArea.top }]}>
-        <Text style={styles.headerTitle}>Morning Board</Text>
-        <Text style={styles.headerSubtitle}>Your dashboard</Text>
+        <View style={styles.headerContent}>
+          <View>
+            <Text style={styles.headerTitle}>Morning Board</Text>
+            <Text style={styles.headerSubtitle}>Your dashboard</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={handleLogout}
+            accessible={true}
+            accessibilityLabel="Logout"
+          >
+            <Text style={styles.logoutButtonText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Scrollable Widget Container */}
@@ -200,6 +220,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#C6C6C8", // Separator color
   },
+  headerContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   headerTitle: {
     fontSize: 34, // Large Title
     fontWeight: "bold",
@@ -209,6 +234,17 @@ const styles = StyleSheet.create({
   headerSubtitle: {
     fontSize: 17, // Body
     color: "#8E8E93", // Secondary Label
+  },
+  logoutButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: "#F2F2F7",
+  },
+  logoutButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FF3B30", // Error/Red color
   },
   scrollView: {
     flex: 1,

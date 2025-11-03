@@ -16,8 +16,18 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { login, ApiError, ErrorType } from "../services/api";
 import { storeAuthData } from "../services/storage";
+import { RootStackParamList } from "../navigation/AppNavigator";
+import { resetToScreen } from "../navigation/navigationService";
+import { useAuth } from "../services/authContext";
+
+type LoginScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  "Login"
+>;
 
 interface ValidationErrors {
   email?: string;
@@ -25,6 +35,8 @@ interface ValidationErrors {
 }
 
 const LoginScreen: React.FC = () => {
+  const navigation = useNavigation<LoginScreenNavigationProp>();
+  const { login: setAuthState } = useAuth();
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
@@ -173,18 +185,18 @@ const LoginScreen: React.FC = () => {
         );
       }
 
-      // TODO: Navigate to dashboard
-      // For now, show success alert
-      Alert.alert("Success", "Login successful!", [
-        {
-          text: "OK",
-          onPress: () => {
-            // TODO: Navigate to dashboard
-            // navigation.navigate('Dashboard');
-            console.log("Navigate to dashboard");
-          },
-        },
-      ]);
+      // Update auth state
+      setAuthState();
+
+      // Navigate to dashboard on successful login
+      // Reset navigation stack to prevent back navigation to login
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Dashboard" }],
+      });
+      
+      // Also use navigation service as fallback
+      resetToScreen("Dashboard");
     } catch (error) {
       // Handle API error with specific error types
       const apiError = error as ApiError;
