@@ -20,6 +20,13 @@ app.use(morgan('combined')); // HTTP request logger
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
+// Simple status endpoint for basic health check
+app.get('/status', (_req: Request, res: Response) => {
+  res.status(200).json({
+    status: 'OK',
+  });
+});
+
 // Health check endpoint (includes database health)
 app.get('/health', (_req: Request, res: Response) => {
   const dbHealthy = checkDatabaseHealth();
