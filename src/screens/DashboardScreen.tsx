@@ -22,6 +22,7 @@ import {
   isTablet,
   isLargeScreen,
 } from "../utils/dimensions";
+import WidgetView from "../components/WidgetView";
 
 // Widget types from backend
 export type WidgetType = "weather" | "slack" | "canvas" | "bank" | "crm";
@@ -40,43 +41,48 @@ interface DashboardScreenProps {
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-// Mock widget data for development
-// TODO: Replace with actual API call to fetch dashboard data
-const mockWidgets: WidgetData[] = [
-  {
-    id: "1",
-    type: "weather",
-    title: "Weather",
-    data: { temperature: 72, condition: "Sunny" },
-  },
-  {
-    id: "2",
-    type: "slack",
-    title: "Slack",
-    data: { unreadCount: 3, recentMessages: [] },
-  },
-  {
-    id: "3",
-    type: "canvas",
-    title: "Canvas",
-    data: { upcomingAssignments: [], announcements: [] },
-  },
-  {
-    id: "4",
-    type: "bank",
-    title: "Bank",
-    data: { balance: 0, transactions: [] },
-  },
-  {
-    id: "5",
-    type: "crm",
-    title: "CRM",
-    data: { contacts: [], tasks: [] },
-  },
-];
+// Dummy widgets for dashboard demonstration
+const WelcomeWidget = () => (
+  <WidgetView
+    title="Welcome"
+    subtitle={`Good ${getTimeOfDayGreeting()}`}
+    headerIcon={<Text style={{ fontSize: 24 }}>🌅</Text>}
+    minHeight={120}
+  >
+    <Text style={styles.welcomeText}>
+      Welcome back! Here's your morning overview.
+    </Text>
+    <Text style={styles.welcomeSubtext}>
+      Your dashboard is ready for the day.
+    </Text>
+  </WidgetView>
+);
+
+const BankAccountWidget = () => (
+  <WidgetView
+    title="Bank Account"
+    subtitle="Checking Account •••• 4321"
+    headerIcon={<Text style={{ fontSize: 24 }}>💰</Text>}
+    backgroundColor="#F8F9FA"
+    minHeight={140}
+  >
+    <View style={styles.bankBalanceContainer}>
+      <Text style={styles.bankBalanceLabel}>Available Balance</Text>
+      <Text style={styles.bankBalanceAmount}>$12,345.67</Text>
+      <Text style={styles.bankBalanceSubtext}>Last updated: 2:30 PM</Text>
+    </View>
+  </WidgetView>
+);
+
+// Helper function to get time-based greeting
+const getTimeOfDayGreeting = (): string => {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
+};
 
 const DashboardScreen: React.FC<DashboardScreenProps> = () => {
-  const [widgets, setWidgets] = useState<WidgetData[]>(mockWidgets);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [screenWidth, setScreenWidth] = useState<number>(SCREEN_WIDTH);
 
@@ -95,13 +101,11 @@ const DashboardScreen: React.FC<DashboardScreenProps> = () => {
     try {
       // TODO: Fetch dashboard data from API
       // const response = await fetchDashboardData();
-      // setWidgets(response.widgets);
       
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
-      // For now, just refresh the existing widgets
-      setWidgets([...mockWidgets]);
+      // Refresh complete
     } catch (error) {
       console.error("Failed to refresh dashboard:", error);
     } finally {
@@ -149,73 +153,39 @@ const DashboardScreen: React.FC<DashboardScreenProps> = () => {
             isMultiColumn && styles.widgetGridMultiColumn,
           ]}
         >
-          {widgets.map((widget) => (
-            <View
-              key={widget.id}
-              style={[
-                styles.widgetContainer,
-                {
-                  width: widgetWidth,
-                  maxWidth: widgetWidth,
-                },
-                isMultiColumn && styles.widgetMultiColumn,
-              ]}
-            >
-              {/* Widget Header */}
-              <View style={styles.widgetHeader}>
-                <Text style={styles.widgetTitle}>{widget.title}</Text>
-                {widget.lastUpdated && (
-                  <Text style={styles.widgetTimestamp}>
-                    {new Date(widget.lastUpdated).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </Text>
-                )}
-              </View>
-
-              {/* Widget Content */}
-              <View style={styles.widgetContent}>
-                <WidgetContent widget={widget} />
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* Empty State (if no widgets) */}
-        {widgets.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyStateText}>
-              No widgets available. Pull to refresh.
-            </Text>
+          {/* Welcome Widget */}
+          <View
+            style={[
+              styles.widgetWrapper,
+              {
+                width: widgetWidth,
+                maxWidth: widgetWidth,
+              },
+              isMultiColumn && styles.widgetMultiColumn,
+            ]}
+          >
+            <WelcomeWidget />
           </View>
-        )}
+
+          {/* Bank Account Widget */}
+          <View
+            style={[
+              styles.widgetWrapper,
+              {
+                width: widgetWidth,
+                maxWidth: widgetWidth,
+              },
+              isMultiColumn && styles.widgetMultiColumn,
+            ]}
+          >
+            <BankAccountWidget />
+          </View>
+        </View>
       </ScrollView>
     </View>
   );
 };
 
-/**
- * Widget Content Component
- * Displays widget-specific content based on type
- */
-interface WidgetContentProps {
-  widget: WidgetData;
-}
-
-const WidgetContent: React.FC<WidgetContentProps> = ({ widget }) => {
-  // Placeholder content - will be replaced with actual widget components
-  return (
-    <View style={styles.placeholderContent}>
-      <Text style={styles.placeholderText}>
-        {widget.type.charAt(0).toUpperCase() + widget.type.slice(1)} Widget
-      </Text>
-      <Text style={styles.placeholderSubtext}>
-        Content will be displayed here
-      </Text>
-    </View>
-  );
-};
 
 const styles = StyleSheet.create({
   container: {
@@ -257,71 +227,45 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-  widgetContainer: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    shadowColor: "#000",
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3, // Android shadow
-    // Ensure consistent width
-    minWidth: isTablet ? getWidgetWidth() : SCREEN_WIDTH - 32,
+  widgetWrapper: {
+    // Wrapper for widgets to ensure proper width
   },
   widgetMultiColumn: {
     marginBottom: 16,
   },
-  widgetHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 12,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: "#C6C6C8",
-  },
-  widgetTitle: {
-    fontSize: 20, // Title 3
-    fontWeight: "600",
-    color: "#000000",
-  },
-  widgetTimestamp: {
-    fontSize: 13, // Footnote
-    color: "#8E8E93",
-  },
-  widgetContent: {
-    minHeight: 100, // Minimum height for widget content
-  },
-  placeholderContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 24,
-  },
-  placeholderText: {
+  // Welcome Widget Styles
+  welcomeText: {
     fontSize: 17, // Body
-    fontWeight: "600",
     color: "#000000",
-    marginBottom: 4,
+    marginBottom: 8,
+    lineHeight: 24,
   },
-  placeholderSubtext: {
+  welcomeSubtext: {
     fontSize: 15, // Subheadline
     color: "#8E8E93",
+    lineHeight: 20,
   },
-  emptyState: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 48,
+  // Bank Account Widget Styles
+  bankBalanceContainer: {
+    alignItems: "flex-start",
   },
-  emptyStateText: {
-    fontSize: 17,
+  bankBalanceLabel: {
+    fontSize: 13, // Footnote
     color: "#8E8E93",
-    textAlign: "center",
+    marginBottom: 8,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  bankBalanceAmount: {
+    fontSize: 32, // Large display number
+    fontWeight: "bold",
+    color: "#000000",
+    marginBottom: 4,
+    letterSpacing: -0.5,
+  },
+  bankBalanceSubtext: {
+    fontSize: 13, // Footnote
+    color: "#8E8E93",
   },
 });
 
