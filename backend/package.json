@@ -10,7 +10,9 @@
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix",
     "type-check": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "seed": "ts-node src/database/seed.ts",
+    "seed:clear": "ts-node -e \"import('./src/database/seed').then(m => m.clearSeedData().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); }))\""
   },
   "keywords": [
     "express",
