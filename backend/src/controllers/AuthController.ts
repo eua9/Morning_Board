@@ -410,8 +410,7 @@ export class AuthController {
       console.error('Token refresh error:', error);
       res.status(401).json({
         message: 'Token refresh failed',
-        error:
-          error instanceof Error ? error.message : 'Invalid refresh token',
+        error: error instanceof Error ? error.message : 'Invalid refresh token',
       });
     }
   }
