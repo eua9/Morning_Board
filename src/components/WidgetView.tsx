@@ -205,9 +205,11 @@ const styles = StyleSheet.create({
     fontSize: 20, // Title 3 from style guide
     fontWeight: "600",
     marginBottom: 4,
+    flexShrink: 1, // Allow title to shrink if needed
   },
   subtitle: {
     fontSize: 13, // Footnote from style guide
+    flexShrink: 1, // Allow subtitle to shrink if needed
   },
   headerRight: {
     marginLeft: 12,
@@ -221,6 +223,7 @@ const styles = StyleSheet.create({
   content: {
     // Content area - flex to fill available space
     minHeight: 100,
+    overflow: "hidden", // Prevent content overflow
   },
   footer: {
     marginTop: 12,

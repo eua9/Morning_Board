@@ -501,16 +501,19 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 16,
     paddingTop: 16,
+    paddingBottom: 24, // Extra padding at bottom for full widget visibility
   },
   widgetGrid: {
     flexDirection: "column",
     alignItems: "center",
+    width: "100%", // Ensure full width
   },
   widgetGridMultiColumn: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
     alignItems: "flex-start",
+    width: "100%", // Ensure full width
   },
   widgetWrapper: {
     // Wrapper for widgets to ensure proper width

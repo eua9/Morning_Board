@@ -92,6 +92,7 @@ The backend API is located in the `backend/` directory. See [backend/README.md](
 **Developer Guides:**
 
 - Adding a new widget type: See [docs/ADDING_NEW_WIDGET.md](docs/ADDING_NEW_WIDGET.md)
+- Widget responsive testing: See [docs/WIDGET_RESPONSIVE_TEST.md](docs/WIDGET_RESPONSIVE_TEST.md)
 
 Quick start:
 
