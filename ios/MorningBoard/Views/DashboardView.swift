@@ -18,36 +18,15 @@ struct DashboardView: View {
     // MARK: - Body
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVGrid(columns: [
-                    GridItem(.flexible(), spacing: 16),
-                    GridItem(.flexible(), spacing: 16)
-                ], spacing: 16) {
-                    // TODO: Add widget views here
-                    // For example:
-                    // ForEach(viewModel.widgets) { widget in
-                    //     WidgetView(widget: widget)
-                    // }
-                    
-                    // Placeholder widgets
-                    Text("Widget 1")
-                        .frame(height: 150)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(12)
-                    
-                    Text("Widget 2")
-                        .frame(height: 150)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.2))
-                        .cornerRadius(12)
-                }
+        // Basic smoke test - Hello World display
+        VStack {
+            Text("Hello World")
+                .font(.largeTitle)
+                .fontWeight(.bold)
                 .padding()
-            }
-            .navigationTitle("Dashboard")
-            .navigationBarTitleDisplayMode(.large)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemBackground))
     }
 }
 
