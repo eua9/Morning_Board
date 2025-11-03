@@ -14,6 +14,7 @@ export function createTables(db: Database.Database): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
       first_name TEXT NOT NULL,
@@ -23,9 +24,13 @@ export function createTables(db: Database.Database): void {
     )
   `);
 
-  // Index on email for faster lookups
+  // Indexes for faster lookups
   db.exec(`
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)
+  `);
+  
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)
   `);
 
   // Widgets table - stores user widget configurations
