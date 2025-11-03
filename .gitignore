@@ -105,3 +105,11 @@ logs
 # Misc
 *.pem
 
+# Database files (local development)
+backend/data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+

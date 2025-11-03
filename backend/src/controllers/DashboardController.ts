@@ -91,7 +91,8 @@ export class DashboardController {
       // 4. Return widget-specific data
 
       const widgetType = req.params.type;
-      const userId = (req as any).userId || 'placeholder-user-id';
+      // TODO: Extract user ID when implementing authentication
+      // const userId = (req as any).userId || 'placeholder-user-id';
 
       // Placeholder response
       res.status(200).json({
