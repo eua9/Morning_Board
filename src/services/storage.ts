@@ -12,6 +12,7 @@ const TOKEN_KEY = '@morning_board:auth_token';
 const REFRESH_TOKEN_KEY = '@morning_board:refresh_token';
 const USER_KEY = '@morning_board:user_data';
 const TOKEN_EXPIRES_KEY = '@morning_board:token_expires';
+const WIDGET_ORDER_KEY = '@morning_board:widget_order';
 
 export interface StoredUserData {
   id: string;
@@ -328,6 +329,55 @@ export const isAuthenticated = async (): Promise<boolean> => {
   } catch (error) {
     console.error('[Storage] Failed to check authentication status:', error);
     return false;
+  }
+};
+
+/**
+ * Store widget order (array of widget IDs)
+ * @param widgetIds - Array of widget IDs in desired order
+ */
+export const storeWidgetOrder = async (widgetIds: string[]): Promise<void> => {
+  try {
+    const storageInstance = await getStorage();
+    await storageInstance.setItem(WIDGET_ORDER_KEY, JSON.stringify(widgetIds));
+    console.log('[Storage] Widget order stored successfully');
+  } catch (error) {
+    console.error('[Storage] Failed to store widget order:', error);
+    throw new Error('Failed to store widget order');
+  }
+};
+
+/**
+ * Retrieve widget order
+ * @returns Array of widget IDs in stored order, or null if not found
+ */
+export const getWidgetOrder = async (): Promise<string[] | null> => {
+  try {
+    const storageInstance = await getStorage();
+    const orderString = await storageInstance.getItem(WIDGET_ORDER_KEY);
+    
+    if (!orderString) {
+      return null;
+    }
+    
+    return JSON.parse(orderString) as string[];
+  } catch (error) {
+    console.error('[Storage] Failed to retrieve widget order:', error);
+    return null;
+  }
+};
+
+/**
+ * Clear widget order (reset to default)
+ */
+export const clearWidgetOrder = async (): Promise<void> => {
+  try {
+    const storageInstance = await getStorage();
+    await storageInstance.removeItem(WIDGET_ORDER_KEY);
+    console.log('[Storage] Widget order cleared successfully');
+  } catch (error) {
+    console.error('[Storage] Failed to clear widget order:', error);
+    throw new Error('Failed to clear widget order');
   }
 };
 
