@@ -1,7 +1,17 @@
 # Morning_Board
 The application will pull data from many platforms and present it into one dashboards. The platforms include Slack, School Canvas sites, Bank information, weather information, and CRM information.
 
+## Project Structure
+
+This repository contains both the frontend (iOS/React Native) and backend (Express.js API) code:
+
+- **`ios/`** - Native iOS application (Swift/SwiftUI)
+- **`backend/`** - Backend API server (Express.js + TypeScript)
+- Frontend (React Native) - Will be initialized using `setup-react-native.sh`
+
 ## Project Setup
+
+### Frontend (React Native)
 
 This is a React Native mobile application. Follow these steps to set up the development environment:
 
@@ -62,6 +72,24 @@ npm start
    - Prettier for code formatting
    - TypeScript support
    - Expo tools
+
+### Backend API
+
+The backend API is located in the `backend/` directory. See [backend/README.md](backend/README.md) for detailed setup instructions.
+
+Quick start:
+```bash
+cd backend
+npm install
+cp .env.example .env
+npm run dev
+```
+
+The backend includes:
+- Express.js server with TypeScript
+- User authentication (AuthController)
+- Dashboard management (DashboardController)
+- User model and data structures
 
 ## Development Branches
 
