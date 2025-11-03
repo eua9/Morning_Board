@@ -14,12 +14,17 @@ import {
   TextStyle,
   Platform,
 } from "react-native";
+import { renderWidget } from "./widgets/WidgetFactory";
 
 export interface WidgetViewProps {
   // Content
   title: string;
-  children: ReactNode;
+  children?: ReactNode;
   subtitle?: string;
+  
+  // Dynamic Widget Rendering (alternative to children)
+  type?: string; // Widget type (e.g., "welcome", "bank", "account_summary")
+  data?: unknown; // Widget-specific data
   
   // Styling
   backgroundColor?: string;
@@ -59,6 +64,8 @@ const WidgetView: React.FC<WidgetViewProps> = ({
   title,
   children,
   subtitle,
+  type,
+  data,
   backgroundColor = "#FFFFFF",
   titleColor = "#000000",
   subtitleColor = "#8E8E93",
@@ -79,6 +86,22 @@ const WidgetView: React.FC<WidgetViewProps> = ({
   titleStyle,
   contentStyle,
 }) => {
+  // If type is provided, render widget dynamically
+  // Otherwise, render children normally
+  const shouldRenderDynamic = type && data !== undefined;
+  
+  if (shouldRenderDynamic) {
+    // Use WidgetFactory to render the widget based on type
+    return renderWidget(
+      {
+        id: `dynamic-${type}-${Date.now()}`,
+        type: type as any,
+        title,
+        data,
+      },
+      onPress
+    );
+  }
   const Container = onPress ? TouchableOpacity : View;
 
   const containerStyles: ViewStyle[] = [
@@ -141,7 +164,13 @@ const WidgetView: React.FC<WidgetViewProps> = ({
       )}
 
       {/* Body Content Area */}
-      <View style={[styles.content, contentStyle]}>{children}</View>
+      <View style={[styles.content, contentStyle]}>
+        {children || (
+          <Text style={{ color: "#8E8E93", fontSize: 15 }}>
+            No content provided
+          </Text>
+        )}
+      </View>
 
       {/* Footer Section (optional) */}
       {footer && <View style={styles.footer}>{footer}</View>}
