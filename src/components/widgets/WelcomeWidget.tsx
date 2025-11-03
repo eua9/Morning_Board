@@ -13,6 +13,9 @@ export const WelcomeWidget: React.FC<BaseWidgetProps> = ({
   lastUpdated,
   onPress,
 }) => {
+  // Debug logging for welcome widget (client-side only)
+  console.log(`[WelcomeWidget] Rendering client-side widget (no backend data)`);
+  
   const greeting = getTimeOfDayGreeting();
 
   return (

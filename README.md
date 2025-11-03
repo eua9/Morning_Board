@@ -89,6 +89,10 @@ The backend API is located in the `backend/` directory. See [backend/README.md](
 - Backend developers: See [backend/WIDGET_SCHEMA_REFERENCE.md](backend/WIDGET_SCHEMA_REFERENCE.md)
 - Frontend developers: See [src/WIDGET_SCHEMA_REFERENCE.md](src/WIDGET_SCHEMA_REFERENCE.md)
 
+**Developer Guides:**
+
+- Adding a new widget type: See [docs/ADDING_NEW_WIDGET.md](docs/ADDING_NEW_WIDGET.md)
+
 Quick start:
 
 ```bash

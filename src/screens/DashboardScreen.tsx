@@ -130,6 +130,12 @@ const DashboardScreen: React.FC<DashboardScreenProps> = () => {
         lastUpdated: widget.lastUpdated ? new Date(widget.lastUpdated) : undefined,
       }));
 
+      // Debug logging for widget rendering verification
+      console.log(`[Dashboard] Loaded ${transformedWidgets.length} widgets from backend`);
+      transformedWidgets.forEach((widget) => {
+        console.log(`[Dashboard] Widget: ${widget.type} - ${widget.title} (ID: ${widget.id.substring(0, 8)}...)`);
+      });
+
       // Store original order from backend
       const originalOrder = transformedWidgets.map(w => w.id);
       setOriginalWidgetOrder(originalOrder);
