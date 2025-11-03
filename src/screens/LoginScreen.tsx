@@ -14,16 +14,121 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
 } from 'react-native';
+
+interface ValidationErrors {
+  email?: string;
+  password?: string;
+}
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<ValidationErrors>({});
+  const [touched, setTouched] = useState<{ email: boolean; password: boolean }>({
+    email: false,
+    password: false,
+  });
+
+  // Email validation function
+  const validateEmail = (emailValue: string): string | undefined => {
+    if (!emailValue.trim()) {
+      return 'Email or username is required';
+    }
+    // Check if it's an email format (contains @ and .)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Allow username format (alphanumeric, underscore, hyphen, dot)
+    const usernameRegex = /^[a-zA-Z0-9._-]+$/;
+    
+    // If it contains @, validate as email; otherwise validate as username
+    if (emailValue.includes('@')) {
+      if (!emailRegex.test(emailValue)) {
+        return 'Please enter a valid email address';
+      }
+    } else {
+      if (!usernameRegex.test(emailValue)) {
+        return 'Username can only contain letters, numbers, and ._-';
+      }
+      if (emailValue.length < 3) {
+        return 'Username must be at least 3 characters';
+      }
+    }
+    return undefined;
+  };
+
+  // Password validation function
+  const validatePassword = (passwordValue: string): string | undefined => {
+    if (!passwordValue) {
+      return 'Password is required';
+    }
+    if (passwordValue.length < 8) {
+      return 'Password must be at least 8 characters';
+    }
+    return undefined;
+  };
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    
+    setErrors({
+      email: emailError,
+      password: passwordError,
+    });
+    
+    return !emailError && !passwordError;
+  };
+
+  // Handle email input change
+  const handleEmailChange = (text: string) => {
+    setEmail(text);
+    if (touched.email) {
+      const error = validateEmail(text);
+      setErrors(prev => ({ ...prev, email: error }));
+    }
+  };
+
+  // Handle password input change
+  const handlePasswordChange = (text: string) => {
+    setPassword(text);
+    if (touched.password) {
+      const error = validatePassword(text);
+      setErrors(prev => ({ ...prev, password: error }));
+    }
+  };
+
+  // Handle email blur
+  const handleEmailBlur = () => {
+    setTouched(prev => ({ ...prev, email: true }));
+    const error = validateEmail(email);
+    setErrors(prev => ({ ...prev, email: error }));
+  };
+
+  // Handle password blur
+  const handlePasswordBlur = () => {
+    setTouched(prev => ({ ...prev, password: true }));
+    const error = validatePassword(password);
+    setErrors(prev => ({ ...prev, password: error }));
+  };
+
+  // Check if form is valid
+  const isFormValid = (): boolean => {
+    const emailError = validateEmail(email);
+    const passwordError = validatePassword(password);
+    return !emailError && !passwordError && email.trim() !== '' && password !== '';
+  };
 
   const handleLogin = () => {
+    // Validate form before submitting
+    if (!validateForm()) {
+      // Mark all fields as touched to show errors
+      setTouched({ email: true, password: true });
+      return;
+    }
+
     // TODO: Implement login functionality
     console.log('Login attempted:', { email, password });
     setIsLoading(true);
@@ -56,28 +161,41 @@ const LoginScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Email or Username</Text>
             <TextInput
-              style={styles.input}
+              style={[
+                styles.input,
+                touched.email && errors.email && styles.inputError,
+              ]}
               placeholder="Enter your email or username"
               placeholderTextColor="#8E8E93"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={handleEmailChange}
+              onBlur={handleEmailBlur}
               keyboardType="email-address"
               autoCapitalize="none"
               autoCorrect={false}
               editable={!isLoading}
             />
+            {touched.email && errors.email && (
+              <Text style={styles.errorText}>{errors.email}</Text>
+            )}
           </View>
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
             <Text style={styles.label}>Password</Text>
-            <View style={styles.passwordContainer}>
+            <View
+              style={[
+                styles.passwordContainer,
+                touched.password && errors.password && styles.passwordContainerError,
+              ]}
+            >
               <TextInput
                 style={styles.passwordInput}
                 placeholder="Enter your password"
                 placeholderTextColor="#8E8E93"
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={handlePasswordChange}
+                onBlur={handlePasswordBlur}
                 secureTextEntry={!isPasswordVisible}
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -91,16 +209,19 @@ const LoginScreen: React.FC = () => {
                 <Text style={styles.eyeIcon}>{isPasswordVisible ? '👁️' : '👁️‍🗨️'}</Text>
               </TouchableOpacity>
             </View>
+            {touched.password && errors.password && (
+              <Text style={styles.errorText}>{errors.password}</Text>
+            )}
           </View>
 
           {/* Login Button */}
           <TouchableOpacity
             style={[
               styles.loginButton,
-              (!email || !password || isLoading) && styles.loginButtonDisabled,
+              (!isFormValid() || isLoading) && styles.loginButtonDisabled,
             ]}
             onPress={handleLogin}
-            disabled={!email || !password || isLoading}
+            disabled={!isFormValid() || isLoading}
           >
             <Text style={styles.loginButtonText}>
               {isLoading ? 'Logging in...' : 'Login'}
@@ -219,6 +340,20 @@ const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: 15, // Subheadline
     color: '#007AFF', // Primary Blue
+  },
+  inputError: {
+    borderColor: '#FF3B30', // Error color from style guide
+    borderWidth: 1.5,
+  },
+  passwordContainerError: {
+    borderColor: '#FF3B30', // Error color from style guide
+    borderWidth: 1.5,
+  },
+  errorText: {
+    fontSize: 13, // Footnote
+    color: '#FF3B30', // Error color from style guide
+    marginTop: 4, // XS spacing
+    marginLeft: 4,
   },
 });
 
