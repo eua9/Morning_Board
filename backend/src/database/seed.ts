@@ -71,17 +71,25 @@ export async function seedDatabase(): Promise<void> {
       now
     );
 
-    console.log('✅ Test user created successfully');
-    console.log('📝 Test credentials:');
-    console.log('   Username: testuser');
-    console.log('   Email: test@morningboard.com');
-    console.log('   Password: TestPassword123!');
-    console.log('   (Password is hashed in database)');
-  } catch (error) {
-    console.error('❌ Database seeding failed:', error);
-    throw error;
-  }
-}
+        console.log('✅ Test user created successfully');
+        console.log('📝 Test credentials:');
+        console.log('   Username: testuser');
+        console.log('   Email: test@morningboard.com');
+        console.log('   Password: TestPassword123!');
+        console.log('   (Password is hashed in database)');
+
+        // Seed widgets for the test user
+        try {
+          const { seedTestUserWidgets } = await import('./widgetSeed');
+          await seedTestUserWidgets();
+        } catch (widgetError) {
+          console.warn('⚠️  Widget seeding skipped:', widgetError);
+        }
+      } catch (error) {
+        console.error('❌ Database seeding failed:', error);
+        throw error;
+      }
+    }
 
 /**
  * Clear all seed data (use with caution)
