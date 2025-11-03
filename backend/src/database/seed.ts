@@ -71,25 +71,33 @@ export async function seedDatabase(): Promise<void> {
       now
     );
 
-        console.log('✅ Test user created successfully');
-        console.log('📝 Test credentials:');
-        console.log('   Username: testuser');
-        console.log('   Email: test@morningboard.com');
-        console.log('   Password: TestPassword123!');
-        console.log('   (Password is hashed in database)');
+    console.log('✅ Test user created successfully');
+    console.log('📝 Test credentials:');
+    console.log('   Username: testuser');
+    console.log('   Email: test@morningboard.com');
+    console.log('   Password: TestPassword123!');
+    console.log('   (Password is hashed in database)');
 
-        // Seed widgets for the test user
-        try {
-          const { seedTestUserWidgets } = await import('./widgetSeed');
-          await seedTestUserWidgets();
-        } catch (widgetError) {
-          console.warn('⚠️  Widget seeding skipped:', widgetError);
-        }
-      } catch (error) {
-        console.error('❌ Database seeding failed:', error);
-        throw error;
-      }
+    // Seed widgets for the test user
+    try {
+      const { seedTestUserWidgets } = await import('./widgetSeed');
+      await seedTestUserWidgets();
+    } catch (widgetError) {
+      console.warn('⚠️  Widget seeding skipped:', widgetError);
     }
+
+    // Seed bank accounts for the test user
+    try {
+      const { seedBankAccounts } = await import('./bankAccountSeed');
+      await seedBankAccounts();
+    } catch (bankAccountError) {
+      console.warn('⚠️  Bank account seeding skipped:', bankAccountError);
+    }
+  } catch (error) {
+    console.error('❌ Database seeding failed:', error);
+    throw error;
+  }
+}
 
 /**
  * Clear all seed data (use with caution)
@@ -100,7 +108,7 @@ export async function clearSeedData(): Promise<void> {
 
     console.log('🗑️  Clearing seed data...');
 
-    // Delete test user
+    // Delete test user (this will cascade delete related bank accounts due to foreign key)
     const deleteUser = db.prepare('DELETE FROM users WHERE email = ? OR username = ?');
     const result = deleteUser.run('test@morningboard.com', 'testuser');
 
@@ -108,6 +116,14 @@ export async function clearSeedData(): Promise<void> {
       console.log(`✅ Deleted ${result.changes} test user(s)`);
     } else {
       console.log('⚠️  No test users found to delete');
+    }
+
+    // Also clear bank account seed data
+    try {
+      const { clearBankAccountSeed } = await import('./bankAccountSeed');
+      await clearBankAccountSeed();
+    } catch (bankAccountError) {
+      console.warn('⚠️  Bank account cleanup skipped:', bankAccountError);
     }
   } catch (error) {
     console.error('❌ Failed to clear seed data:', error);
