@@ -1,7 +1,7 @@
 /**
  * Authentication Controller
  * Handles user authentication-related operations
- * 
+ *
  * Responsibilities:
  * - User registration
  * - User login
@@ -11,7 +11,8 @@
  */
 
 import { Request, Response } from 'express';
-import { User } from '../models/User';
+// TODO: Use User model when implementing authentication
+// import { User } from '../models/User';
 
 export class AuthController {
   /**
@@ -31,14 +32,15 @@ export class AuthController {
       // 6. Generate JWT token
       // 7. Return user data and token (exclude password)
 
-      const { email, password, firstName, lastName } = req.body;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email, password: _password, firstName, lastName } = req.body;
 
       // Placeholder response
       res.status(201).json({
         message: 'User registered successfully',
         user: {
           id: 'placeholder-id',
-          email,
+          email: email || 'placeholder@example.com',
           firstName,
           lastName,
         },
@@ -68,14 +70,15 @@ export class AuthController {
       // 4. Generate JWT token
       // 5. Return user data and token (exclude password)
 
-      const { email, password } = req.body;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email: _email, password: _password } = req.body;
 
       // Placeholder response
       res.status(200).json({
         message: 'Login successful',
         user: {
           id: 'placeholder-id',
-          email,
+          email: _email || 'placeholder@example.com',
         },
         token: 'placeholder-token',
       });
@@ -94,7 +97,7 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response confirming logout
    */
-  static async logout(req: Request, res: Response): Promise<void> {
+  static async logout(_req: Request, res: Response): Promise<void> {
     try {
       // TODO: Implement logout
       // 1. Extract token from request
@@ -120,7 +123,10 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response confirming password reset email sent
    */
-  static async requestPasswordReset(req: Request, res: Response): Promise<void> {
+  static async requestPasswordReset(
+    req: Request,
+    res: Response
+  ): Promise<void> {
     try {
       // TODO: Implement password reset request
       // 1. Validate email in request
@@ -130,11 +136,13 @@ export class AuthController {
       // 5. Send password reset email
       // 6. Return success response (don't expose if user exists)
 
-      const { email } = req.body;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email: _email } = req.body;
 
       // Placeholder response
       res.status(200).json({
-        message: 'If an account exists with this email, a password reset link has been sent',
+        message:
+          'If an account exists with this email, a password reset link has been sent',
       });
     } catch (error) {
       // TODO: Handle errors appropriately
@@ -162,7 +170,8 @@ export class AuthController {
       // 6. Invalidate reset token
       // 7. Return success response
 
-      const { token, newPassword } = req.body;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { token: _token, newPassword: _newPassword } = req.body;
 
       // Placeholder response
       res.status(200).json({
@@ -172,7 +181,8 @@ export class AuthController {
       // TODO: Handle errors appropriately
       res.status(400).json({
         message: 'Password reset failed',
-        error: error instanceof Error ? error.message : 'Invalid or expired token',
+        error:
+          error instanceof Error ? error.message : 'Invalid or expired token',
       });
     }
   }
@@ -183,7 +193,7 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response with user data if token is valid
    */
-  static async verifyToken(req: Request, res: Response): Promise<void> {
+  static async verifyToken(_req: Request, res: Response): Promise<void> {
     try {
       // TODO: Implement token verification
       // 1. Extract token from request headers
@@ -214,7 +224,7 @@ export class AuthController {
    * @param res - Express response object
    * @returns JSON response with new access token
    */
-  static async refreshToken(req: Request, res: Response): Promise<void> {
+  static async refreshToken(_req: Request, res: Response): Promise<void> {
     try {
       // TODO: Implement token refresh
       // 1. Extract refresh token from request
@@ -236,4 +246,3 @@ export class AuthController {
     }
   }
 }
-

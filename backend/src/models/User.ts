@@ -76,6 +76,7 @@ export class User implements IUser {
    * @returns User object without password
    */
   toJSON(): Omit<IUser, 'password'> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...userWithoutPassword } = this;
     return userWithoutPassword;
   }
@@ -105,7 +106,7 @@ export class User implements IUser {
   static async hashPassword(plainPassword: string): Promise<string> {
     // TODO: Implement password hashing using bcrypt
     // Example: return await bcrypt.hash(plainPassword, 10);
-    return plainPassword; // Placeholder
+    return Promise.resolve(plainPassword); // Placeholder
   }
 
   /**
@@ -125,10 +126,10 @@ export class User implements IUser {
 
   /**
    * Find user by ID
-   * @param id - User ID
+   * @param _id - User ID
    * @returns User instance or null if not found
    */
-  static async findById(id: string): Promise<User | null> {
+  static async findById(_id: string): Promise<User | null> {
     // TODO: Implement database lookup
     // This should query the database for a user with the given ID
     return null;
@@ -136,10 +137,10 @@ export class User implements IUser {
 
   /**
    * Find user by email
-   * @param email - User email
+   * @param _email - User email
    * @returns User instance or null if not found
    */
-  static async findByEmail(email: string): Promise<User | null> {
+  static async findByEmail(_email: string): Promise<User | null> {
     // TODO: Implement database lookup
     // This should query the database for a user with the given email
     return null;
