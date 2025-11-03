@@ -11,8 +11,8 @@
  */
 
 import { Request, Response } from 'express';
-// TODO: Use User model when implementing authentication
-// import { User } from '../models/User';
+import { User } from '../models/User';
+import { getDatabase } from '../config/database';
 
 export class AuthController {
   /**
@@ -57,36 +57,110 @@ export class AuthController {
 
   /**
    * Authenticate user and return token
-   * @param req - Express request object containing email and password
+   * @param req - Express request object containing username/email and password
    * @param res - Express response object
    * @returns JSON response with user data and token
    */
   static async login(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement user login
-      // 1. Validate request data (email, password)
-      // 2. Find user by email
-      // 3. Compare provided password with stored hash
-      // 4. Generate JWT token
-      // 5. Return user data and token (exclude password)
+      // 1. Validate request data
+      const { email: identifier, password } = req.body;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { email: _email, password: _password } = req.body;
+      if (!identifier || !password) {
+        res.status(400).json({
+          message: 'Login failed',
+          error: 'Username/email and password are required',
+        });
+        return;
+      }
 
-      // Placeholder response
+      if (typeof identifier !== 'string' || typeof password !== 'string') {
+        res.status(400).json({
+          message: 'Login failed',
+          error: 'Invalid input format',
+        });
+        return;
+      }
+
+      // 2. Find user by username or email
+      const db = getDatabase();
+      
+      // Try username first, then email
+      let userRow = db
+        .prepare('SELECT * FROM users WHERE username = ?')
+        .get(identifier) as
+        | {
+            id: string;
+            username: string;
+            email: string;
+            password: string;
+            first_name: string;
+            last_name: string;
+            created_at: string;
+            updated_at: string;
+          }
+        | undefined;
+
+      // If not found by username, try email
+      if (!userRow) {
+        userRow = db
+          .prepare('SELECT * FROM users WHERE email = ?')
+          .get(identifier) as typeof userRow;
+      }
+
+      if (!userRow) {
+        res.status(401).json({
+          message: 'Login failed',
+          error: 'User not found',
+        });
+        return;
+      }
+
+      // 3. Create User instance from database row
+      const user = new User({
+        id: userRow.id,
+        username: userRow.username,
+        email: userRow.email,
+        password: userRow.password,
+        firstName: userRow.first_name,
+        lastName: userRow.last_name,
+        createdAt: new Date(userRow.created_at),
+        updatedAt: new Date(userRow.updated_at),
+      });
+
+      // 4. Authenticate password using User model's authenticate method
+      const isAuthenticated = await user.authenticate(password);
+
+      if (!isAuthenticated) {
+        res.status(401).json({
+          message: 'Login failed',
+          error: 'Invalid password',
+        });
+        return;
+      }
+
+      // 5. Generate token (TODO: Replace with JWT implementation)
+      // For now, using a placeholder token
+      const token = `token_${user.id}_${Date.now()}`;
+
+      // 6. Return user data and token (exclude password)
       res.status(200).json({
         message: 'Login successful',
         user: {
-          id: 'placeholder-id',
-          email: _email || 'placeholder@example.com',
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          firstName: user.firstName,
+          lastName: user.lastName,
         },
-        token: 'placeholder-token',
+        token,
       });
     } catch (error) {
-      // TODO: Handle errors appropriately
-      res.status(401).json({
+      console.error('Login error:', error);
+      res.status(500).json({
         message: 'Login failed',
-        error: error instanceof Error ? error.message : 'Invalid credentials',
+        error:
+          error instanceof Error ? error.message : 'An unexpected error occurred',
       });
     }
   }
