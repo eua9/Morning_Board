@@ -33,7 +33,7 @@ export interface DashboardData {
   userId: string;
   widgets: WidgetData[];
   layout: WidgetLayout[];
-  lastSync: Date;
+  lastSync: string; // ISO 8601 timestamp string (UTC)
 }
 
 export interface WidgetLayout {
