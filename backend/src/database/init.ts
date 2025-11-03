@@ -5,6 +5,7 @@
 
 import { getDatabaseConnection } from '../config/database';
 import { createTables } from './schema';
+import { seedDatabase } from './seed';
 
 /**
  * Initialize the database with schema
@@ -28,6 +29,16 @@ export async function initializeDatabase(): Promise<void> {
 
     console.log(`✅ Database initialized with ${tables.length} tables:`, 
       tables.map((t) => t.name).join(', '));
+
+    // Seed database with test user if in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      try {
+        await seedDatabase();
+      } catch (seedError) {
+        // Don't fail initialization if seeding fails
+        console.warn('⚠️  Seed data creation skipped:', seedError);
+      }
+    }
 
     return Promise.resolve();
   } catch (error) {
