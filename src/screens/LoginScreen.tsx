@@ -17,6 +17,7 @@ import {
   Alert,
 } from "react-native";
 import { login, ApiError, ErrorType } from "../services/api";
+import { storeAuthData } from "../services/storage";
 
 interface ValidationErrors {
   email?: string;
@@ -148,12 +149,22 @@ const LoginScreen: React.FC = () => {
         password: password,
       });
 
-      // Store token (TODO: Use secure storage in production)
-      // For now, storing in a simple way - replace with secure storage later
-      console.log("Login successful, token:", response.token);
-
-      // TODO: Store token in secure storage (e.g., AsyncStorage or Keychain)
-      // await SecureStore.setItemAsync('auth_token', response.token);
+      // Store authentication token and user data securely
+      try {
+        await storeAuthData(response.token, {
+          id: response.user.id,
+          email: response.user.email,
+        });
+        console.log("Login successful - token and user data stored");
+      } catch (storageError) {
+        console.error("Failed to store authentication data:", storageError);
+        // Show warning but don't block login - token is still available in memory
+        Alert.alert(
+          "Storage Warning",
+          "Login successful, but failed to save session. You may need to log in again after closing the app.",
+          [{ text: "OK" }]
+        );
+      }
 
       // TODO: Navigate to dashboard
       // For now, show success alert
@@ -170,11 +181,11 @@ const LoginScreen: React.FC = () => {
     } catch (error) {
       // Handle API error with specific error types
       const apiError = error as ApiError;
-      
+
       // Get user-friendly error message based on error type
       let errorMessage = apiError.message || "Login failed. Please try again.";
       let alertTitle = "Login Failed";
-      
+
       // Customize messages based on error type
       switch (apiError.type) {
         case ErrorType.NETWORK_ERROR:
@@ -213,14 +224,15 @@ const LoginScreen: React.FC = () => {
           alertTitle = "Server Error";
           break;
         case ErrorType.VALIDATION_ERROR:
-          errorMessage = "Invalid input. Please check your credentials and try again.";
+          errorMessage =
+            "Invalid input. Please check your credentials and try again.";
           alertTitle = "Validation Error";
           break;
         default:
           // Use the message from the API error
           break;
       }
-      
+
       setApiError(errorMessage);
 
       // Show error alert with appropriate title
