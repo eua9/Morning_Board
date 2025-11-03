@@ -1,12 +1,51 @@
-# Widget Response Schema Specification
+# Widget Schema Documentation
 
 ## Overview
 
 This document defines the expected response structure for each widget type returned by the `/api/dashboard` endpoint. This schema ensures consistency between backend API responses and frontend rendering logic.
 
+**Purpose:** Standardize integration between backend and frontend developers by documenting widget types, data structures, and rendering requirements.
+
 **API Endpoint:** `GET /api/dashboard`
 
-**Last Updated:** 2024-11-03
+**Last Updated:** 2025-11-03
+
+**Document Status:** ✅ Active - Approved for Development
+
+---
+
+## Quick Reference
+
+### Supported Widget Types
+
+| Widget Type | Title | Data Source | Required Fields |
+|------------|-------|-------------|----------------|
+| `weather` | Weather | External API | `temperature`, `condition`, `location` |
+| `slack` | Slack | Slack API | `unreadCount` |
+| `canvas` | Canvas | Canvas LMS API | At least one: `upcomingAssignments` or `announcements` |
+| `bank` | Bank Account | Banking API | `accountNumber`, `accountType`, `balance` |
+| `crm` | CRM | CRM System API | At least one: `contacts` or `tasks` |
+| `welcome` | Welcome | Local (client-side) | None (empty data object) |
+
+**Note:** The `bank` widget type is also referred to as "account_summary" in some contexts, but the API uses `type: "bank"`.
+
+---
+
+## Table of Contents
+
+1. [Common Widget Structure](#common-widget-structure)
+2. [Widget Types](#widget-types)
+   - [Weather Widget](#widget-type-weather)
+   - [Slack Widget](#widget-type-slack)
+   - [Canvas Widget](#widget-type-canvas)
+   - [Bank Widget](#widget-type-bank-account_summary)
+   - [CRM Widget](#widget-type-crm)
+   - [Welcome Widget](#widget-type-welcome)
+3. [Complete Dashboard Response](#complete-dashboard-response)
+4. [Field Type Specifications](#field-type-specifications)
+5. [Validation Rules](#validation-rules)
+6. [Error Handling](#error-handling)
+7. [Frontend/Backend Alignment](#frontendbackend-alignment)
 
 ---
 
@@ -83,11 +122,13 @@ interface WeatherWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Displays temperature prominently (large font)
-- Shows condition below temperature
-- Uses location as widget subtitle
-- Forecast is optional and can be displayed in expanded view
+**Frontend Rendering Notes:**
+- **Temperature Display:** Display temperature prominently using large font (e.g., "72°")
+- **Condition Icon:** Use weather condition to select appropriate icon (sunny, cloudy, rainy, etc.)
+- **Location Display:** Show location as widget subtitle (e.g., "San Francisco, CA")
+- **Forecast Display:** Forecast array is optional - display in expanded view or card footer
+- **Temperature Unit:** All temperatures are in Fahrenheit (°F)
+- **Visual Design:** Consider color-coding based on temperature ranges (warm colors for hot, cool colors for cold)
 
 ---
 
@@ -132,10 +173,13 @@ interface SlackWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Shows unread count in subtitle (e.g., "3 unread messages")
-- Displays recent messages list (optional)
-- Timestamps are relative (e.g., "30 min ago")
+**Frontend Rendering Notes:**
+- **Unread Badge:** Display unread count prominently (badge or subtitle, e.g., "3 unread messages")
+- **Message List:** Display recent messages array if provided (truncate long messages)
+- **Timestamp Format:** Show relative timestamps (e.g., "30 min ago", "2 hours ago", "yesterday")
+- **Channel Display:** Show channel name with # prefix styling
+- **Empty State:** If `unreadCount` is 0, show "All caught up!" message
+- **Click Action:** Widget should be clickable to navigate to Slack app or web view
 
 ---
 
@@ -190,17 +234,22 @@ interface CanvasWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Shows assignment count in subtitle (e.g., "2 upcoming assignments")
-- Displays assignments with due dates
-- Formats due dates relative (e.g., "Due in 2 days")
-- Announcements shown separately or in expanded view
+**Frontend Rendering Notes:**
+- **Assignment Count:** Display count in subtitle (e.g., "2 upcoming assignments")
+- **Assignment List:** Show assignments with title, course, and due date
+- **Due Date Format:** Format due dates relative to current time (e.g., "Due in 2 days", "Due tomorrow", "Overdue")
+- **Urgency Indicators:** Use color-coding for urgent assignments (red for overdue, yellow for due soon)
+- **Announcements Display:** Show announcements separately or in expanded view/collapsible section
+- **Empty State:** If both arrays are empty, show "No upcoming assignments or announcements"
+- **Click Action:** Allow navigation to full Canvas LMS view
 
 ---
 
-## Widget Type: `bank`
+## Widget Type: `bank` (Account Summary)
 
-**Title:** "Bank Account"
+**Title:** "Bank Account" or "Account Summary"
+
+**Alias:** Also known as "account_summary" in frontend discussions, but API type is `"bank"`.
 
 **Data Structure:**
 ```typescript
@@ -228,11 +277,13 @@ interface BankWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Shows account type and masked number in subtitle
-- Displays balance prominently (large, bold font)
-- Formats balance as currency (e.g., "$12,345.67")
-- Shows lastUpdated time if provided
+**Frontend Rendering Notes:**
+- **Account Display:** Show account type and masked number in subtitle (e.g., "Checking Account •••• 4321")
+- **Balance Display:** Display balance prominently using large, bold font
+- **Currency Formatting:** Format balance as currency with thousands separator (e.g., "$12,345.67")
+- **Negative Balances:** Handle negative balances for overdrawn accounts (display in red or with warning indicator)
+- **Last Updated:** Show lastUpdated time if provided (e.g., "Updated 2:30 PM")
+- **Security:** Mask account numbers for privacy (only show last 4 digits)
 
 ---
 
@@ -292,11 +343,18 @@ interface CRMWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Shows task count in subtitle (e.g., "2 active tasks")
-- Displays tasks with priority indicators (color-coded)
-- Formats due dates relative (e.g., "Due in 1 day")
-- Contacts shown in expanded view or separate section
+**Frontend Rendering Notes:**
+- **Task Count:** Display task count in subtitle (e.g., "2 active tasks")
+- **Priority Indicators:** Use color-coded badges/icons for priority levels:
+  - `high`: Red or prominent indicator
+  - `medium`: Yellow/Orange indicator
+  - `low`: Green or subtle indicator
+- **Due Date Format:** Format due dates relative (e.g., "Due in 1 day", "Due today")
+- **Task List:** Display tasks with title, due date, and priority badge
+- **Contacts Display:** Show contacts in expanded view or separate collapsible section
+- **Contact Format:** Display contact name and email, with "Last contacted" relative time
+- **Empty State:** If both arrays are empty, show "No tasks or contacts"
+- **Click Action:** Allow navigation to full CRM view
 
 ---
 
@@ -325,10 +383,15 @@ interface WelcomeWidgetData {
 }
 ```
 
-**Frontend Rendering:**
-- Time-based greeting ("Good morning/afternoon/evening")
-- Welcome message
-- Not fetched from API, rendered locally
+**Frontend Rendering Notes:**
+- **Time-based Greeting:** Generate greeting based on current time:
+  - Morning (before 12 PM): "Good morning"
+  - Afternoon (12 PM - 5 PM): "Good afternoon"
+  - Evening (after 5 PM): "Good evening"
+- **Welcome Message:** Display personalized welcome message with user's name if available
+- **Client-side Only:** This widget is NOT fetched from API - rendered entirely on frontend
+- **Data Source:** Uses local device time and stored user preferences
+- **No Data Required:** Data object is empty `{}` - all content is generated client-side
 
 ---
 
@@ -526,16 +589,76 @@ All timestamp fields use **ISO 8601 format** (UTC):
 
 ---
 
-## Contact
+## Integration Checklist
+
+### For Backend Developers
+- [ ] Ensure all widget types return data matching the schemas above
+- [ ] Validate required fields before sending responses
+- [ ] Use ISO 8601 format for all timestamp fields
+- [ ] Test with empty/missing optional fields
+- [ ] Reference `backend/src/controllers/DashboardController.ts` for implementation
+
+### For Frontend Developers
+- [ ] Use type guards to safely cast widget data
+- [ ] Handle missing optional fields gracefully
+- [ ] Implement proper date/time formatting
+- [ ] Add loading and error states for widgets
+- [ ] Reference `src/components/widgets/` for widget components
+- [ ] Use shared types from `shared/types/widgets.ts`
+
+### Shared Types Location
+- **Frontend:** `src/shared/types/widgets.ts` (or `shared/types/widgets.ts`)
+- **Backend:** `backend/src/models/Widget.ts` and `backend/src/models/WidgetData.ts`
+- **Common:** `shared/types/widgets.ts` (shared between both)
+
+---
+
+## Additional Resources
+
+### Related Documentation
+- **Widget Architecture:** See `WIDGET_ARCHITECTURE.md` for widget rendering pattern
+- **Backend Reference:** See `backend/WIDGET_SCHEMA_REFERENCE.md` for backend-specific notes
+- **Frontend Reference:** See `src/WIDGET_SCHEMA_REFERENCE.md` for frontend-specific notes
+- **Dashboard Controller Update:** See `backend/DASHBOARD_CONTROLLER_UPDATE.md` for recent changes
+
+### Code Locations
+
+**Backend:**
+- Controller: `backend/src/controllers/DashboardController.ts`
+- Widget Model: `backend/src/models/Widget.ts`
+- WidgetData Model: `backend/src/models/WidgetData.ts`
+- Database Schema: `backend/src/database/schema.ts`
+
+**Frontend:**
+- Widget Factory: `src/components/widgets/WidgetFactory.tsx`
+- Widget Components: `src/components/widgets/`
+- Dashboard Screen: `src/screens/DashboardScreen.tsx`
+- Shared Types: `shared/types/widgets.ts`
+
+---
+
+## Contact & Updates
 
 For questions or updates to this schema:
 - **Frontend Team:** Update widget components and this document
 - **Backend Team:** Ensure API responses match this schema
 - **Documentation:** Keep this file synchronized with code changes
 
+**When to Update This Document:**
+- Adding a new widget type
+- Changing field requirements
+- Modifying data structures
+- Adding new optional fields
+
+**Version History:**
+- **v1.0.0** (2025-11-03): Initial comprehensive schema documentation
+- **v1.1.0** (2025-11-03): Added detailed rendering notes and integration checklist
+
 ---
 
 **Document Status:** ✅ Approved for Development
 
-**Next Review Date:** 2024-12-01
+**Next Review Date:** 2025-12-01
+
+**Maintained By:** Backend & Frontend Development Teams
 
