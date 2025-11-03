@@ -84,7 +84,7 @@ export class AuthController {
 
       // 2. Find user by username or email
       const db = getDatabase();
-      
+
       // Try username first, then email
       let userRow = db
         .prepare('SELECT * FROM users WHERE username = ?')
@@ -160,7 +160,9 @@ export class AuthController {
       res.status(500).json({
         message: 'Login failed',
         error:
-          error instanceof Error ? error.message : 'An unexpected error occurred',
+          error instanceof Error
+            ? error.message
+            : 'An unexpected error occurred',
       });
     }
   }
