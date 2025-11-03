@@ -14,7 +14,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
+import { login, ApiError } from "../services/api";
 
 interface ValidationErrors {
   email?: string;
@@ -27,6 +29,7 @@ const LoginScreen: React.FC = () => {
   const [isPasswordVisible, setIsPasswordVisible] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [apiError, setApiError] = useState<string>("");
   const [touched, setTouched] = useState<{ email: boolean; password: boolean }>(
     {
       email: false,
@@ -125,7 +128,7 @@ const LoginScreen: React.FC = () => {
     );
   };
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     // Validate form before submitting
     if (!validateForm()) {
       // Mark all fields as touched to show errors
@@ -133,15 +136,49 @@ const LoginScreen: React.FC = () => {
       return;
     }
 
-    // TODO: Implement login functionality
-    console.log("Login attempted:", { email, password });
+    // Clear previous API errors
+    setApiError("");
+
     setIsLoading(true);
 
-    // Placeholder for API call
-    setTimeout(() => {
+    try {
+      // Call login API
+      const response = await login({
+        email: email.trim(),
+        password: password,
+      });
+
+      // Store token (TODO: Use secure storage in production)
+      // For now, storing in a simple way - replace with secure storage later
+      console.log("Login successful, token:", response.token);
+      
+      // TODO: Store token in secure storage (e.g., AsyncStorage or Keychain)
+      // await SecureStore.setItemAsync('auth_token', response.token);
+      
+      // TODO: Navigate to dashboard
+      // For now, show success alert
+      Alert.alert("Success", "Login successful!", [
+        {
+          text: "OK",
+          onPress: () => {
+            // TODO: Navigate to dashboard
+            // navigation.navigate('Dashboard');
+            console.log("Navigate to dashboard");
+          },
+        },
+      ]);
+    } catch (error) {
+      // Handle API error
+      const apiError = error as ApiError;
+      const errorMessage =
+        apiError.message || "Login failed. Please try again.";
+      setApiError(errorMessage);
+
+      // Show error alert
+      Alert.alert("Login Failed", errorMessage);
+    } finally {
       setIsLoading(false);
-      // TODO: Navigate to dashboard on success
-    }, 1500);
+    }
   };
 
   return (
@@ -221,6 +258,13 @@ const LoginScreen: React.FC = () => {
               <Text style={styles.errorText}>{errors.password}</Text>
             )}
           </View>
+
+          {/* API Error Message */}
+          {apiError && (
+            <View style={styles.apiErrorContainer}>
+              <Text style={styles.apiErrorText}>{apiError}</Text>
+            </View>
+          )}
 
           {/* Login Button */}
           <TouchableOpacity
@@ -362,6 +406,20 @@ const styles = StyleSheet.create({
     color: "#FF3B30", // Error color from style guide
     marginTop: 4, // XS spacing
     marginLeft: 4,
+  },
+  apiErrorContainer: {
+    backgroundColor: "#FFEBEE", // Light red background
+    borderWidth: 1,
+    borderColor: "#FF3B30",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  apiErrorText: {
+    fontSize: 15, // Subheadline
+    color: "#FF3B30", // Error color from style guide
+    textAlign: "center",
   },
 });
 

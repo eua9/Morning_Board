@@ -7,6 +7,9 @@ import dotenv from 'dotenv';
 // Database
 import { initializeDatabase, checkDatabaseHealth } from './database/init';
 
+// Controllers
+import { AuthController } from './controllers/AuthController';
+
 // Load environment variables
 dotenv.config();
 
@@ -46,6 +49,15 @@ app.get('/', (_req: Request, res: Response) => {
     version: '1.0.0',
   });
 });
+
+// Authentication routes
+app.post('/api/auth/login', AuthController.login);
+app.post('/api/auth/register', AuthController.register);
+app.post('/api/auth/logout', AuthController.logout);
+app.post('/api/auth/reset-password', AuthController.requestPasswordReset);
+app.post('/api/auth/reset', AuthController.resetPassword);
+app.get('/api/auth/verify', AuthController.verifyToken);
+app.post('/api/auth/refresh', AuthController.refreshToken);
 
 // Initialize database and start server
 async function startServer() {
