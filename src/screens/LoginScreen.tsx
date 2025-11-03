@@ -151,11 +151,18 @@ const LoginScreen: React.FC = () => {
 
       // Store authentication token and user data securely
       try {
-        await storeAuthData(response.token, {
-          id: response.user.id,
-          email: response.user.email,
-        });
+        await storeAuthData(
+          response.token,
+          {
+            id: response.user.id,
+            email: response.user.email,
+            username: response.user.username,
+          },
+          response.refreshToken,
+          response.expiresIn
+        );
         console.log("Login successful - token and user data stored");
+        console.log("Token expires in:", response.expiresIn, "seconds");
       } catch (storageError) {
         console.error("Failed to store authentication data:", storageError);
         // Show warning but don't block login - token is still available in memory
