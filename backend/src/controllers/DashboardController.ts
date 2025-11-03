@@ -7,23 +7,33 @@
  * - Aggregate data from various sources (Slack, Canvas, Bank, Weather, CRM)
  * - Manage user widget preferences
  * - Return formatted dashboard data
+ * 
+ * Widget Schema Reference:
+ * See WIDGET_SCHEMA.md for complete schema documentation.
+ * All widget responses must match the documented structure.
  */
 
 import { Request, Response } from 'express';
 
+/**
+ * Widget Data Interface
+ * Matches the schema defined in WIDGET_SCHEMA.md
+ * 
+ * @see WIDGET_SCHEMA.md for detailed field specifications
+ */
 export interface WidgetData {
-  id: string;
+  id: string;                      // Unique widget identifier (e.g., "weather-1")
   type: 'weather' | 'slack' | 'canvas' | 'bank' | 'crm';
-  title: string;
-  data: unknown; // Widget-specific data structure
-  lastUpdated: Date;
+  title: string;                  // Widget display title
+  data: unknown;                   // Widget-specific data (see WIDGET_SCHEMA.md)
+  lastUpdated: string;            // ISO 8601 timestamp (always UTC)
 }
 
 export interface DashboardData {
   userId: string;
   widgets: WidgetData[];
   layout: WidgetLayout[];
-  lastSync: Date;
+  lastSync: string; // ISO 8601 timestamp string (UTC)
 }
 
 export interface WidgetLayout {
@@ -41,29 +51,145 @@ export class DashboardController {
    */
   static async getDashboard(req: Request, res: Response): Promise<void> {
     try {
-      // TODO: Implement dashboard data retrieval
-      // 1. Extract user ID from authenticated request
-      // 2. Fetch user's widget preferences/layout
-      // 3. Aggregate data from all configured widget sources:
-      //    - Weather widget data
-      //    - Slack widget data (recent messages)
-      //    - Canvas widget data (upcoming assignments)
-      //    - Bank widget data (account balances)
-      //    - CRM widget data (recent contacts)
-      // 4. Format data according to widget types
-      // 5. Return complete dashboard data with layout
-
+      // TODO: Extract user ID from authenticated request when auth is implemented
+      // const userId = (req as any).userId;
+      
+      // For now, use placeholder user ID
       const userId = (req as any).userId || 'placeholder-user-id';
 
-      // Placeholder response
-      res.status(200).json({
+      // Hardcoded widget data - foundation for real API integration
+      // This matches the frontend WidgetData interface
+      const widgets: WidgetData[] = [
+        {
+          id: 'weather-1',
+          type: 'weather',
+          title: 'Weather',
+          data: {
+            temperature: 72,
+            condition: 'Sunny',
+            location: 'San Francisco, CA',
+            forecast: [
+              { day: 'Today', high: 75, low: 65 },
+              { day: 'Tomorrow', high: 73, low: 63 },
+              { day: 'Wednesday', high: 70, low: 60 },
+            ],
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+        {
+          id: 'slack-1',
+          type: 'slack',
+          title: 'Slack',
+          data: {
+            unreadCount: 3,
+            recentMessages: [
+              {
+                channel: '#general',
+                message: 'Meeting at 3 PM today',
+                timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(), // 30 min ago
+              },
+              {
+                channel: '#dev-team',
+                message: 'PR ready for review',
+                timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+              },
+            ],
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+        {
+          id: 'canvas-1',
+          type: 'canvas',
+          title: 'Canvas',
+          data: {
+            upcomingAssignments: [
+              {
+                title: 'Math Homework - Chapter 5',
+                dueDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days
+                course: 'Mathematics 101',
+              },
+              {
+                title: 'Essay - History Paper',
+                dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days
+                course: 'World History',
+              },
+            ],
+            announcements: [
+              {
+                title: 'Office hours changed',
+                course: 'Mathematics 101',
+                postedAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+              },
+            ],
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+        {
+          id: 'bank-1',
+          type: 'bank',
+          title: 'Bank Account',
+          data: {
+            accountNumber: '•••• 4321',
+            accountType: 'Checking Account',
+            balance: 12345.67,
+            lastUpdated: new Date().toLocaleTimeString('en-US', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+        {
+          id: 'crm-1',
+          type: 'crm',
+          title: 'CRM',
+          data: {
+            contacts: [
+              {
+                name: 'John Doe',
+                email: 'john@example.com',
+                lastContacted: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+              },
+              {
+                name: 'Jane Smith',
+                email: 'jane@example.com',
+                lastContacted: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
+              },
+            ],
+            tasks: [
+              {
+                title: 'Follow up with client',
+                dueDate: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 1 day
+                priority: 'high',
+              },
+              {
+                title: 'Prepare quarterly report',
+                dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days
+                priority: 'medium',
+              },
+            ],
+          },
+          lastUpdated: new Date().toISOString(),
+        },
+      ];
+
+      // TODO: Fetch user's widget layout preferences from database
+      const layout: WidgetLayout[] = widgets.map((widget, index) => ({
+        widgetId: widget.id,
+        position: { x: index % 2, y: Math.floor(index / 2) },
+        size: { width: 1, height: 1 },
+      }));
+
+      const response: DashboardData = {
         userId,
-        widgets: [],
-        layout: [],
-        lastSync: new Date(),
-      });
+        widgets,
+        layout,
+        lastSync: new Date().toISOString(),
+      };
+
+      res.status(200).json(response);
     } catch (error) {
-      // TODO: Handle errors appropriately
+      console.error('Dashboard fetch error:', error);
       res.status(500).json({
         message: 'Failed to fetch dashboard data',
         error: error instanceof Error ? error.message : 'Unknown error',
