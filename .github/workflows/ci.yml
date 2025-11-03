@@ -92,3 +92,19 @@ jobs:
             echo "⚠️ No build script found, skipping build check"
           fi
 
+      - name: Run Tests (Backend)
+        continue-on-error: true
+        run: |
+          if [ -d "backend" ]; then
+            echo "Backend directory detected, running tests..."
+            cd backend
+            if npm run | grep -q "  test"; then
+              echo "Running backend tests..."
+              npm run test
+            else
+              echo "⚠️ No test script found in backend, skipping tests"
+            fi
+          else
+            echo "⚠️ No backend directory found, skipping backend tests"
+          fi
+
