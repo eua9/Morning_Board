@@ -1,4 +1,5 @@
 # Morning_Board
+
 The application will pull data from many platforms and present it into one dashboards. The platforms include Slack, School Canvas sites, Bank information, weather information, and CRM information.
 
 ## Project Structure
@@ -18,8 +19,9 @@ This is a React Native mobile application. Follow these steps to set up the deve
 ### Prerequisites
 
 1. **Node.js** (v16 or higher)
+
    - Download from [nodejs.org](https://nodejs.org/) (LTS version recommended)
-   - Or use nvm: 
+   - Or use nvm:
      ```bash
      curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
      nvm install 18
@@ -29,6 +31,7 @@ This is a React Native mobile application. Follow these steps to set up the deve
 2. **npm** (comes with Node.js)
 
 3. **For iOS Development:**
+
    - macOS required
    - Xcode (from App Store)
    - CocoaPods: `sudo gem install cocoapods`
@@ -47,6 +50,7 @@ Run the setup script:
 ```
 
 The script will:
+
 - Check Node.js installation
 - Initialize the React Native project (Expo or React Native CLI)
 - Install dependencies
@@ -55,11 +59,13 @@ The script will:
 ### Development
 
 **Expo:**
+
 ```bash
 npm start
 ```
 
 **React Native CLI:**
+
 - iOS: `npm run ios`
 - Android: `npm run android`
 
@@ -78,11 +84,13 @@ npm start
 The backend API is located in the `backend/` directory. See [backend/README.md](backend/README.md) for detailed setup instructions.
 
 **Widget Schema Documentation:**
+
 - See [WIDGET_SCHEMA.md](WIDGET_SCHEMA.md) for complete widget response schema specifications
 - Backend developers: See [backend/WIDGET_SCHEMA_REFERENCE.md](backend/WIDGET_SCHEMA_REFERENCE.md)
 - Frontend developers: See [src/WIDGET_SCHEMA_REFERENCE.md](src/WIDGET_SCHEMA_REFERENCE.md)
 
 Quick start:
+
 ```bash
 cd backend
 npm install
@@ -91,6 +99,7 @@ npm run dev
 ```
 
 The backend includes:
+
 - Express.js server with TypeScript
 - User authentication (AuthController)
 - Dashboard management (DashboardController)
@@ -99,6 +108,7 @@ The backend includes:
 ## Development Branches
 
 There will be 3 development branches:
+
 - Frontend_Dev
 - Backend_Dev
 - QA_Dev
