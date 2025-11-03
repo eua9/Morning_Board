@@ -14,9 +14,10 @@ import { View, Text } from "react-native";
 import { WidgetData, WidgetType } from "../../screens/DashboardScreen";
 import WidgetView from "../WidgetView";
 
-// Import widget components (will be created)
+// Import widget components
 import { WelcomeWidget } from "./WelcomeWidget";
 import { BankAccountWidget } from "./BankAccountWidget";
+import { AccountSummaryWidget } from "./AccountSummaryWidget";
 import { WeatherWidget } from "./WeatherWidget";
 import { SlackWidget } from "./SlackWidget";
 import { CanvasWidget } from "./CanvasWidget";
@@ -57,6 +58,7 @@ const WIDGET_REGISTRY: Record<string, WidgetComponent> = {
   slack: SlackWidget,
   canvas: CanvasWidget,
   bank: BankAccountWidget,
+  account_summary: AccountSummaryWidget, // Alias for bank widget
   crm: CRMWidget,
 };
 
@@ -109,6 +111,40 @@ export const renderWidget = (
 };
 
 /**
+ * Render widget by type (factory method)
+ * Convenience function for rendering widgets based on type string
+ * 
+ * @param type - Widget type identifier (e.g., "welcome", "bank", "account_summary")
+ * @param data - Widget-specific data object
+ * @param title - Widget title
+ * @param onPress - Optional press handler
+ * @param lastUpdated - Optional last updated timestamp
+ * @returns Rendered widget component or fallback
+ * 
+ * @example
+ * renderWidgetByType("welcome", {}, "Welcome")
+ * renderWidgetByType("account_summary", { balance: 1000 }, "Account Summary")
+ */
+export const renderWidgetByType = (
+  type: string | WidgetType,
+  data: unknown,
+  title: string,
+  onPress?: () => void,
+  lastUpdated?: Date
+): React.ReactElement => {
+  return renderWidget(
+    {
+      id: `${type}-${Date.now()}`,
+      type: type as WidgetType,
+      title,
+      data,
+      lastUpdated,
+    },
+    onPress
+  );
+};
+
+/**
  * Check if a widget type is supported
  * @param type - Widget type to check
  * @returns True if widget type is registered
@@ -128,6 +164,7 @@ export const getSupportedWidgetTypes = (): string[] => {
 export default {
   getWidgetComponent,
   renderWidget,
+  renderWidgetByType,
   isWidgetTypeSupported,
   getSupportedWidgetTypes,
 };

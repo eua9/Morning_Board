@@ -226,3 +226,96 @@ export const register = async (userData: {
   }
 };
 
+
+/**
+ * Dashboard response interface
+ * Matches the backend DashboardController response structure
+ */
+export interface DashboardResponse {
+  userId: string;
+  widgets: Array<{
+    id: string;
+    type: string;
+    title: string;
+    data: unknown;
+    lastUpdated: string; // ISO 8601 timestamp
+  }>;
+  layout: Array<{
+    widgetId: string;
+    position: { x: number; y: number };
+    size: { width: number; height: number };
+  }>;
+  lastSync: string; // ISO 8601 timestamp
+}
+
+/**
+ * Fetch dashboard data from backend
+ * @param token - Optional authentication token
+ * @returns Promise with dashboard response
+ */
+export const fetchDashboard = async (
+  token?: string
+): Promise<DashboardResponse> => {
+  try {
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add authorization token if provided
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/dashboard`, {
+      method: 'GET',
+      headers,
+    });
+
+    // Try to parse JSON response
+    let data;
+    try {
+      data = await response.json();
+    } catch (parseError) {
+      // If JSON parsing fails, create error from status
+      const error: ApiError = {
+        message: getErrorMessageForStatus(response.status),
+        error: 'Failed to parse server response',
+        type: getErrorTypeForStatus(response.status),
+        statusCode: response.status,
+      };
+      throw error;
+    }
+
+    if (!response.ok) {
+      // Handle API error response
+      const errorType = getErrorTypeForStatus(response.status);
+      const error: ApiError = {
+        message: data.message || getErrorMessageForStatus(response.status),
+        error: data.error,
+        type: errorType,
+        statusCode: response.status,
+      };
+      throw error;
+    }
+
+    return data as DashboardResponse;
+  } catch (error) {
+    // Handle network errors (no response received)
+    if (
+      error &&
+      typeof error === 'object' &&
+      'message' in error &&
+      'type' in error
+    ) {
+      throw error as ApiError;
+    }
+
+    // Network error - fetch failed (no internet, server down, etc.)
+    throw {
+      message:
+        'Unable to connect to the server. Please check your internet connection and try again.',
+      error: 'Network connection failed',
+      type: ErrorType.NETWORK_ERROR,
+    } as ApiError;
+  }
+};

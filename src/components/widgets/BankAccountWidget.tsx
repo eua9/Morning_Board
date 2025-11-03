@@ -24,6 +24,14 @@ export const BankAccountWidget: React.FC<BaseWidgetProps> = ({
   // Type-safe data extraction
   const bankData = data as BankAccountData;
   
+  // Debug logging for widget data verification
+  console.log(`[BankWidget] Rendering with data:`, {
+    accountNumber: bankData?.accountNumber,
+    accountType: bankData?.accountType,
+    balance: bankData?.balance,
+    lastUpdated: bankData?.lastUpdated,
+  });
+  
   // Default values for dummy widget
   const accountNumber = bankData?.accountNumber || "•••• 4321";
   const accountType = bankData?.accountType || "Checking Account";
