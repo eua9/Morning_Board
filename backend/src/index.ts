@@ -9,6 +9,7 @@ import { initializeDatabase, checkDatabaseHealth } from './database/init';
 
 // Controllers
 import { AuthController } from './controllers/AuthController';
+import { DashboardController } from './controllers/DashboardController';
 
 // Load environment variables
 dotenv.config();
@@ -112,6 +113,16 @@ app.post('/api/auth/reset-password', AuthController.requestPasswordReset);
 app.post('/api/auth/reset', AuthController.resetPassword);
 app.get('/api/auth/verify', AuthController.verifyToken);
 app.post('/api/auth/refresh', AuthController.refreshToken);
+
+// Dashboard routes
+app.get('/api/dashboard', DashboardController.getDashboard);
+app.get('/api/dashboard/widget/:type', DashboardController.getWidgetData);
+app.put('/api/dashboard/layout', DashboardController.updateLayout);
+app.post('/api/dashboard/widget', DashboardController.addWidget);
+app.delete('/api/dashboard/widget/:id', DashboardController.removeWidget);
+app.post('/api/dashboard/sync', DashboardController.syncWidgets);
+app.get('/api/dashboard/widget/:id/config', DashboardController.getWidgetConfig);
+app.put('/api/dashboard/widget/:id/config', DashboardController.updateWidgetConfig);
 
 // Initialize database and start server
 async function startServer() {
