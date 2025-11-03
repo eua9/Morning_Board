@@ -7,16 +7,26 @@
  * - Aggregate data from various sources (Slack, Canvas, Bank, Weather, CRM)
  * - Manage user widget preferences
  * - Return formatted dashboard data
+ * 
+ * Widget Schema Reference:
+ * See WIDGET_SCHEMA.md for complete schema documentation.
+ * All widget responses must match the documented structure.
  */
 
 import { Request, Response } from 'express';
 
+/**
+ * Widget Data Interface
+ * Matches the schema defined in WIDGET_SCHEMA.md
+ * 
+ * @see WIDGET_SCHEMA.md for detailed field specifications
+ */
 export interface WidgetData {
-  id: string;
+  id: string;                      // Unique widget identifier (e.g., "weather-1")
   type: 'weather' | 'slack' | 'canvas' | 'bank' | 'crm';
-  title: string;
-  data: unknown; // Widget-specific data structure
-  lastUpdated: Date | string; // ISO string or Date for API responses
+  title: string;                  // Widget display title
+  data: unknown;                   // Widget-specific data (see WIDGET_SCHEMA.md)
+  lastUpdated: string;            // ISO 8601 timestamp (always UTC)
 }
 
 export interface DashboardData {
@@ -174,7 +184,7 @@ export class DashboardController {
         userId,
         widgets,
         layout,
-        lastSync: new Date(),
+        lastSync: new Date().toISOString(),
       };
 
       res.status(200).json(response);
