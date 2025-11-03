@@ -11,6 +11,10 @@
  * - lastName: User's last name
  * - createdAt: Account creation timestamp
  * - updatedAt: Last update timestamp
+ * 
+ * Relationships:
+ * - One User can have many BankAccounts (one-to-many)
+ *   Use BankAccount.findByUserId(userId) to retrieve all accounts for a user
  */
 
 import bcrypt from 'bcrypt';

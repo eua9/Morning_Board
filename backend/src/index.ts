@@ -10,6 +10,10 @@ import { initializeDatabase, checkDatabaseHealth } from './database/init';
 // Controllers
 import { AuthController } from './controllers/AuthController';
 import { DashboardController } from './controllers/DashboardController';
+import { BankAccountController } from './controllers/BankAccountController';
+
+// Middleware
+import { authenticate } from './middleware/auth';
 
 // Load environment variables
 dotenv.config();
@@ -123,6 +127,12 @@ app.delete('/api/dashboard/widget/:id', DashboardController.removeWidget);
 app.post('/api/dashboard/sync', DashboardController.syncWidgets);
 app.get('/api/dashboard/widget/:id/config', DashboardController.getWidgetConfig);
 app.put('/api/dashboard/widget/:id/config', DashboardController.updateWidgetConfig);
+
+// Bank Account routes (require authentication)
+app.get('/api/accounts', authenticate, BankAccountController.getAccounts);
+app.post('/api/accounts', authenticate, BankAccountController.addAccount);
+app.get('/api/accounts/:accountId', authenticate, BankAccountController.getAccountById);
+app.delete('/api/accounts/:accountId', authenticate, BankAccountController.deleteAccount);
 
 // Initialize database and start server
 async function startServer() {

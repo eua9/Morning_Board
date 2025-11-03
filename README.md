@@ -83,16 +83,22 @@ npm start
 
 The backend API is located in the `backend/` directory. See [backend/README.md](backend/README.md) for detailed setup instructions.
 
-**Widget Schema Documentation:**
+**Documentation:**
 
-- See [WIDGET_SCHEMA.md](WIDGET_SCHEMA.md) for complete widget response schema specifications
-- Backend developers: See [backend/WIDGET_SCHEMA_REFERENCE.md](backend/WIDGET_SCHEMA_REFERENCE.md)
-- Frontend developers: See [src/WIDGET_SCHEMA_REFERENCE.md](src/WIDGET_SCHEMA_REFERENCE.md)
+All project documentation is organized in the [README/](README/) folder:
+- **Widget Documentation:** [README/widgets/](README/widgets/)
+- **Backend Documentation:** [README/backend/](README/backend/)
+- **Frontend Documentation:** [README/frontend/](README/frontend/)
+- **Testing Documentation:** [README/testing/](README/testing/)
+- **Verification Reports:** [README/verification/](README/verification/)
+- **Guides:** [README/guides/](README/guides/)
 
-**Developer Guides:**
-
-- Adding a new widget type: See [docs/ADDING_NEW_WIDGET.md](docs/ADDING_NEW_WIDGET.md)
-- Widget responsive testing: See [docs/WIDGET_RESPONSIVE_TEST.md](docs/WIDGET_RESPONSIVE_TEST.md)
+Quick links:
+- Widget Schema: [README/widgets/WIDGET_SCHEMA.md](README/widgets/WIDGET_SCHEMA.md)
+- Adding New Widget: [README/widgets/ADDING_NEW_WIDGET.md](README/widgets/ADDING_NEW_WIDGET.md)
+- Widget Architecture: [README/widgets/WIDGET_ARCHITECTURE.md](README/widgets/WIDGET_ARCHITECTURE.md)
+- Backend Widget Reference: [README/backend/WIDGET_SCHEMA_REFERENCE.md](README/backend/WIDGET_SCHEMA_REFERENCE.md)
+- Frontend Widget Reference: [README/frontend/WIDGET_SCHEMA_REFERENCE.md](README/frontend/WIDGET_SCHEMA_REFERENCE.md)
 
 Quick start:
 

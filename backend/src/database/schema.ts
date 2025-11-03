@@ -115,6 +115,24 @@ export function createTables(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at)
   `);
 
+  // Bank Accounts table - stores user bank accounts
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS bank_accounts (
+      account_id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      balance REAL NOT NULL DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `);
+
+  // Index on user_id for faster lookups
+  db.exec(`
+    CREATE INDEX IF NOT EXISTS idx_bank_accounts_user_id ON bank_accounts(user_id)
+  `);
+
   console.log('✅ Database tables created successfully');
 }
 
@@ -127,6 +145,7 @@ export function dropTables(db: Database.Database): void {
     DROP TABLE IF EXISTS widget_data_cache;
     DROP TABLE IF EXISTS dashboard_layouts;
     DROP TABLE IF EXISTS widgets;
+    DROP TABLE IF EXISTS bank_accounts;
     DROP TABLE IF EXISTS sessions;
     DROP TABLE IF EXISTS users;
   `);
