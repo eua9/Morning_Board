@@ -16,7 +16,7 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { login, ApiError } from "../services/api";
+import { login, ApiError, ErrorType } from "../services/api";
 
 interface ValidationErrors {
   email?: string;
@@ -168,14 +168,63 @@ const LoginScreen: React.FC = () => {
         },
       ]);
     } catch (error) {
-      // Handle API error
+      // Handle API error with specific error types
       const apiError = error as ApiError;
-      const errorMessage =
-        apiError.message || "Login failed. Please try again.";
+      
+      // Get user-friendly error message based on error type
+      let errorMessage = apiError.message || "Login failed. Please try again.";
+      let alertTitle = "Login Failed";
+      
+      // Customize messages based on error type
+      switch (apiError.type) {
+        case ErrorType.NETWORK_ERROR:
+          errorMessage =
+            "Unable to connect to the server. Please check your internet connection and try again.";
+          alertTitle = "Connection Error";
+          break;
+        case ErrorType.UNAUTHORIZED:
+          // Check if it's a wrong password or user not found
+          if (
+            apiError.error?.toLowerCase().includes("password") ||
+            apiError.error?.toLowerCase().includes("invalid")
+          ) {
+            errorMessage = "Incorrect password. Please try again.";
+            alertTitle = "Authentication Failed";
+          } else if (
+            apiError.error?.toLowerCase().includes("not found") ||
+            apiError.error?.toLowerCase().includes("user")
+          ) {
+            errorMessage =
+              "User not found. Please check your email address and try again.";
+            alertTitle = "User Not Found";
+          } else {
+            errorMessage = "Invalid email or password. Please try again.";
+            alertTitle = "Authentication Failed";
+          }
+          break;
+        case ErrorType.NOT_FOUND:
+          errorMessage =
+            "User not found. Please check your email address and try again.";
+          alertTitle = "User Not Found";
+          break;
+        case ErrorType.SERVER_ERROR:
+          errorMessage =
+            "Server error. Please try again in a few moments. If the problem persists, contact support.";
+          alertTitle = "Server Error";
+          break;
+        case ErrorType.VALIDATION_ERROR:
+          errorMessage = "Invalid input. Please check your credentials and try again.";
+          alertTitle = "Validation Error";
+          break;
+        default:
+          // Use the message from the API error
+          break;
+      }
+      
       setApiError(errorMessage);
 
-      // Show error alert
-      Alert.alert("Login Failed", errorMessage);
+      // Show error alert with appropriate title
+      Alert.alert(alertTitle, errorMessage);
     } finally {
       setIsLoading(false);
     }
