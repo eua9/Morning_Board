@@ -77,6 +77,11 @@ npm start
 
 The backend API is located in the `backend/` directory. See [backend/README.md](backend/README.md) for detailed setup instructions.
 
+**Widget Schema Documentation:**
+- See [WIDGET_SCHEMA.md](WIDGET_SCHEMA.md) for complete widget response schema specifications
+- Backend developers: See [backend/WIDGET_SCHEMA_REFERENCE.md](backend/WIDGET_SCHEMA_REFERENCE.md)
+- Frontend developers: See [src/WIDGET_SCHEMA_REFERENCE.md](src/WIDGET_SCHEMA_REFERENCE.md)
+
 Quick start:
 ```bash
 cd backend
