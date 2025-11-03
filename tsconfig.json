@@ -14,11 +14,9 @@
     "noEmit": true,
     "isolatedModules": true,
     "allowJs": true,
-    "noImplicitAny": false,
-    "suppressImplicitAnyIndexErrors": true
+    "noImplicitAny": false
   },
   "include": ["src/**/*", "src/types/**/*.d.ts"],
   "exclude": ["node_modules", "backend", "ios", "dist"],
   "typeRoots": ["./node_modules/@types", "./src/types"]
 }
-
