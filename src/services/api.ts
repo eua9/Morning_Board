@@ -20,8 +20,13 @@ export interface LoginResponse {
   user: {
     id: string;
     email: string;
+    username?: string;
+    firstName?: string;
+    lastName?: string;
   };
-  token: string;
+  token: string; // JWT access token
+  refreshToken?: string; // JWT refresh token (optional for backward compatibility)
+  expiresIn?: number; // Token expiration in seconds
 }
 
 export enum ErrorType {

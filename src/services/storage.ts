@@ -9,11 +9,21 @@
  */
 
 const TOKEN_KEY = '@morning_board:auth_token';
+const REFRESH_TOKEN_KEY = '@morning_board:refresh_token';
 const USER_KEY = '@morning_board:user_data';
+const TOKEN_EXPIRES_KEY = '@morning_board:token_expires';
 
 export interface StoredUserData {
   id: string;
   email: string;
+  username?: string;
+}
+
+export interface StoredAuthData {
+  token: string;
+  refreshToken?: string;
+  expiresAt?: number; // Unix timestamp
+  userData: StoredUserData;
 }
 
 /**
@@ -146,23 +156,145 @@ export const getUserData = async (): Promise<StoredUserData | null> => {
 };
 
 /**
- * Store both token and user data
- * @param token - Authentication token
+ * Store refresh token
+ * @param refreshToken - JWT refresh token
+ */
+export const storeRefreshToken = async (refreshToken: string): Promise<void> => {
+  try {
+    const storageInstance = await getStorage();
+    await storageInstance.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    console.log('[Storage] Refresh token stored successfully');
+  } catch (error) {
+    console.error('[Storage] Failed to store refresh token:', error);
+    throw new Error('Failed to store refresh token');
+  }
+};
+
+/**
+ * Retrieve refresh token
+ * @returns Refresh token string or null if not found
+ */
+export const getRefreshToken = async (): Promise<string | null> => {
+  try {
+    const storageInstance = await getStorage();
+    const token = await storageInstance.getItem(REFRESH_TOKEN_KEY);
+    return token;
+  } catch (error) {
+    console.error('[Storage] Failed to retrieve refresh token:', error);
+    return null;
+  }
+};
+
+/**
+ * Store token expiration timestamp
+ * @param expiresIn - Expiration time in seconds from now
+ */
+export const storeTokenExpiration = async (expiresIn: number): Promise<void> => {
+  try {
+    const storageInstance = await getStorage();
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresIn; // Unix timestamp
+    await storageInstance.setItem(TOKEN_EXPIRES_KEY, expiresAt.toString());
+    console.log('[Storage] Token expiration stored successfully');
+  } catch (error) {
+    console.error('[Storage] Failed to store token expiration:', error);
+    throw new Error('Failed to store token expiration');
+  }
+};
+
+/**
+ * Get token expiration timestamp
+ * @returns Expiration timestamp (Unix seconds) or null
+ */
+export const getTokenExpiration = async (): Promise<number | null> => {
+  try {
+    const storageInstance = await getStorage();
+    const expiresAt = await storageInstance.getItem(TOKEN_EXPIRES_KEY);
+    return expiresAt ? parseInt(expiresAt, 10) : null;
+  } catch (error) {
+    console.error('[Storage] Failed to retrieve token expiration:', error);
+    return null;
+  }
+};
+
+/**
+ * Check if token is expired
+ * @returns true if token is expired, false otherwise
+ */
+export const isTokenExpired = async (): Promise<boolean> => {
+  try {
+    const expiresAt = await getTokenExpiration();
+    if (!expiresAt) {
+      return true; // Assume expired if no expiration stored
+    }
+    const now = Math.floor(Date.now() / 1000);
+    return now >= expiresAt;
+  } catch (error) {
+    console.error('[Storage] Failed to check token expiration:', error);
+    return true;
+  }
+};
+
+/**
+ * Store both token and user data with refresh token and expiration
+ * @param token - JWT access token
  * @param userData - User information
+ * @param refreshToken - JWT refresh token (optional)
+ * @param expiresIn - Token expiration in seconds (optional)
  */
 export const storeAuthData = async (
   token: string,
-  userData: StoredUserData
+  userData: StoredUserData,
+  refreshToken?: string,
+  expiresIn?: number
 ): Promise<void> => {
   try {
-    await Promise.all([
+    const promises: Promise<void>[] = [
       storeAuthToken(token),
       storeUserData(userData),
-    ]);
+    ];
+
+    if (refreshToken) {
+      promises.push(storeRefreshToken(refreshToken));
+    }
+
+    if (expiresIn) {
+      promises.push(storeTokenExpiration(expiresIn));
+    }
+
+    await Promise.all(promises);
     console.log('[Storage] Authentication data stored successfully');
   } catch (error) {
     console.error('[Storage] Failed to store auth data:', error);
     throw error;
+  }
+};
+
+/**
+ * Retrieve all authentication data
+ * @returns Complete auth data or null if not found
+ */
+export const getAuthData = async (): Promise<StoredAuthData | null> => {
+  try {
+    const [token, refreshToken, userData, expiresAt] = await Promise.all([
+      getAuthToken(),
+      getRefreshToken(),
+      getUserData(),
+      getTokenExpiration(),
+    ]);
+
+    if (!token || !userData) {
+      return null;
+    }
+
+    return {
+      token,
+      refreshToken: refreshToken || undefined,
+      expiresAt: expiresAt || undefined,
+      userData,
+    };
+  } catch (error) {
+    console.error('[Storage] Failed to retrieve auth data:', error);
+    return null;
   }
 };
 
@@ -174,7 +306,9 @@ export const clearAuthData = async (): Promise<void> => {
     const storageInstance = await getStorage();
     await Promise.all([
       storageInstance.removeItem(TOKEN_KEY),
+      storageInstance.removeItem(REFRESH_TOKEN_KEY),
       storageInstance.removeItem(USER_KEY),
+      storageInstance.removeItem(TOKEN_EXPIRES_KEY),
     ]);
     console.log('[Storage] Authentication data cleared successfully');
   } catch (error) {
