@@ -151,10 +151,10 @@ const LoginScreen: React.FC = () => {
       // Store token (TODO: Use secure storage in production)
       // For now, storing in a simple way - replace with secure storage later
       console.log("Login successful, token:", response.token);
-      
+
       // TODO: Store token in secure storage (e.g., AsyncStorage or Keychain)
       // await SecureStore.setItemAsync('auth_token', response.token);
-      
+
       // TODO: Navigate to dashboard
       // For now, show success alert
       Alert.alert("Success", "Login successful!", [
