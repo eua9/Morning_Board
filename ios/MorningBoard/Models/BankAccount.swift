@@ -35,3 +35,10 @@ struct AddAccountResponse: Codable {
     let account: BankAccount
 }
 
+/// Response model for getting all bank accounts
+struct GetAccountsResponse: Codable {
+    let message: String
+    let accounts: [BankAccount]
+    let count: Int
+}
+

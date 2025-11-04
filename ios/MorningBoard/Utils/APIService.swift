@@ -111,6 +111,78 @@ class APIService {
             }
         }.resume()
     }
+    
+    // MARK: - Get Accounts
+    
+    /// Get all bank accounts for the authenticated user
+    /// - Parameter completion: Completion handler with result
+    static func getAccounts(
+        completion: @escaping (Result<GetAccountsResponse, APIError>) -> Void
+    ) {
+        // Get access token
+        guard let accessToken = TokenStorage.getAccessToken() else {
+            completion(.failure(.unauthorized("No access token found")))
+            return
+        }
+        
+        // Build URL
+        guard let url = URL(string: "\(baseURL)/api/accounts") else {
+            completion(.failure(.invalidURL))
+            return
+        }
+        
+        // Create request
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "GET"
+        urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        urlRequest.timeoutInterval = timeoutInterval
+        
+        // Perform request
+        URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+            // Handle network error
+            if let error = error {
+                completion(.failure(.networkError(error.localizedDescription)))
+                return
+            }
+            
+            // Handle HTTP response
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(.invalidResponse))
+                return
+            }
+            
+            // Handle response data
+            guard let data = data else {
+                completion(.failure(.noData))
+                return
+            }
+            
+            // Handle status codes
+            switch httpResponse.statusCode {
+            case 200:
+                // Success - decode response
+                do {
+                    let decoder = JSONDecoder()
+                    // Use default camelCase decoding to match backend API
+                    let response = try decoder.decode(GetAccountsResponse.self, from: data)
+                    completion(.success(response))
+                } catch {
+                    completion(.failure(.decodingError(error.localizedDescription)))
+                }
+            case 401:
+                completion(.failure(.unauthorized("Authentication required")))
+            case 500...599:
+                // Server error - try to decode error message
+                if let errorMessage = try? JSONDecoder().decode(APIErrorMessage.self, from: data) {
+                    completion(.failure(.serverError(errorMessage.error)))
+                } else {
+                    completion(.failure(.serverError("Server error occurred")))
+                }
+            default:
+                completion(.failure(.unknownError("Unexpected status code: \(httpResponse.statusCode)")))
+            }
+        }.resume()
+    }
 }
 
 // MARK: - API Error Types
