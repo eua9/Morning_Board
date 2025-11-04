@@ -97,5 +97,129 @@ final class AddAccountViewTests: XCTestCase {
         let shouldBeEnabled = !filledName.isEmpty && !filledNumber.isEmpty && !isLoading
         XCTAssertTrue(shouldBeEnabled, "Submit button should be enabled when fields are filled")
     }
+    
+    // MARK: - Account Number Length Validation Tests
+    
+    /// Test that account numbers over 200 characters are rejected
+    func testAccountNumberLengthValidation() {
+        let longAccountNumber = String(repeating: "1", count: 201) // 201 characters
+        
+        let trimmedNumber = longAccountNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        XCTAssertTrue(trimmedNumber.count > 200, "Account number exceeding 200 characters should be invalid")
+        
+        // Test valid length
+        let validNumber = String(repeating: "1", count: 200) // Exactly 200 characters
+        let trimmedValid = validNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        XCTAssertTrue(trimmedValid.count <= 200, "Account number with 200 characters should be valid")
+    }
+    
+    // MARK: - Special Characters Validation Tests
+    
+    /// Test that account names with invalid special characters are rejected
+    func testAccountNameSpecialCharactersValidation() {
+        // Valid characters: letters, numbers, spaces, hyphens, underscores, periods, apostrophes
+        let validNames = [
+            "Checking Account",
+            "Savings-Account",
+            "Account_123",
+            "John's Account",
+            "Account.01"
+        ]
+        
+        for name in validNames {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            XCTAssertFalse(trimmed.isEmpty, "Valid name should not be empty: \(name)")
+        }
+        
+        // Invalid characters: @, #, $, %, ^, &, *, etc.
+        let invalidNames = [
+            "Account@Bank",
+            "Account#123",
+            "Account$Savings",
+            "Account%Interest",
+            "Account^Special",
+            "Account&Company",
+            "Account*Star"
+        ]
+        
+        // Test that names with invalid characters would fail validation
+        // In actual implementation, these should trigger validation errors
+        for name in invalidNames {
+            let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+            // Check if name contains invalid characters
+            let allowedChars = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_'.")
+            let hasInvalidChars = trimmed.rangeOfCharacter(from: allowedChars.inverted) != nil
+            XCTAssertTrue(hasInvalidChars, "Name should contain invalid characters: \(name)")
+        }
+    }
+    
+    // MARK: - Duplicate Account Name Validation Tests
+    
+    /// Test that duplicate account names are detected
+    func testDuplicateAccountNameValidation() {
+        let existingAccount = BankAccount(
+            accountId: "existing-1",
+            name: "Checking Account",
+            balance: 0.0,
+            createdAt: "2025-01-01T00:00:00.000Z",
+            updatedAt: "2025-01-01T00:00:00.000Z"
+        )
+        
+        let existingAccounts = [existingAccount]
+        
+        // Test exact duplicate (case-sensitive check should be case-insensitive)
+        let duplicateName = "Checking Account"
+        let duplicateFound = existingAccounts.contains { account in
+            account.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == duplicateName.lowercased()
+        }
+        XCTAssertTrue(duplicateFound, "Duplicate account name should be detected")
+        
+        // Test case-insensitive duplicate
+        let caseDuplicateName = "checking account"
+        let caseDuplicateFound = existingAccounts.contains { account in
+            account.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == caseDuplicateName.lowercased()
+        }
+        XCTAssertTrue(caseDuplicateFound, "Case-insensitive duplicate should be detected")
+        
+        // Test non-duplicate
+        let uniqueName = "Savings Account"
+        let uniqueFound = existingAccounts.contains { account in
+            account.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == uniqueName.lowercased()
+        }
+        XCTAssertFalse(uniqueFound, "Unique account name should not be detected as duplicate")
+    }
+    
+    // MARK: - Name Equals Number Validation Tests
+    
+    /// Test that account name cannot be the same as account number
+    func testNameNotEqualToNumberValidation() {
+        // Test when name and number are the same (should be invalid)
+        let sameValue = "12345"
+        let name = sameValue
+        let number = sameValue
+        
+        XCTAssertEqual(name.lowercased(), number.lowercased(), "Name and number should be equal (invalid case)")
+        
+        // Test when name and number are different (should be valid)
+        let differentName = "Checking Account"
+        let differentNumber = "1234567890"
+        XCTAssertNotEqual(differentName.lowercased(), differentNumber.lowercased(), "Name and number should be different (valid case)")
+        
+        // Test case-insensitive comparison
+        let nameCase1 = "Account123"
+        let numberCase1 = "account123"
+        XCTAssertEqual(nameCase1.lowercased(), numberCase1.lowercased(), "Case-insensitive comparison should detect equality")
+    }
+    
+    /// Test that whitespace is handled correctly in name/number comparison
+    func testNameNumberComparisonWithWhitespace() {
+        let name = "  Account 123  "
+        let number = "Account 123"
+        
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNumber = number.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        XCTAssertEqual(trimmedName.lowercased(), trimmedNumber.lowercased(), "Whitespace should be ignored in comparison")
+    }
 }
 

@@ -22,6 +22,8 @@ struct AddAccountView: View {
     @State private var showErrorAlert: Bool = false
     @State private var errorMessage: String = ""
     @State private var showSuccessAlert: Bool = false
+    @State private var existingAccounts: [BankAccount] = []
+    @State private var isLoadingAccounts: Bool = false
     
     // MARK: - Body
     
@@ -68,6 +70,10 @@ struct AddAccountView: View {
                                 .onChange(of: accountName) { _ in
                                     if hasAttemptedSubmit {
                                         _ = validateAccountName()
+                                        // Also validate cross-field rules if both fields have values
+                                        if !accountNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            _ = validateNameNotEqualToNumber()
+                                        }
                                     }
                                 }
                             
@@ -96,6 +102,10 @@ struct AddAccountView: View {
                                 .onChange(of: accountNumber) { _ in
                                     if hasAttemptedSubmit {
                                         _ = validateAccountNumber()
+                                        // Also validate cross-field rules if both fields have values
+                                        if !accountName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                            _ = validateNameNotEqualToNumber()
+                                        }
                                     }
                                 }
                             
@@ -161,6 +171,9 @@ struct AddAccountView: View {
             } message: {
                 Text("Account added successfully!")
             }
+            .onAppear {
+                fetchExistingAccounts()
+            }
         }
     }
     
@@ -170,12 +183,58 @@ struct AddAccountView: View {
     private func validateForm() -> Bool {
         let nameValid = validateAccountName()
         let numberValid = validateAccountNumber()
-        return nameValid && numberValid
+        
+        if !nameValid || !numberValid {
+            return false
+        }
+        
+        // Additional validation: Check that name and number are not the same
+        return validateNameNotEqualToNumber() && validateNoDuplicateNameAndNumber()
+    }
+    
+    /// Validate that account name is not the same as account number
+    private func validateNameNotEqualToNumber() -> Bool {
+        let trimmedName = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNumber = accountNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Only validate if both fields have values
+        guard !trimmedName.isEmpty && !trimmedNumber.isEmpty else {
+            return true
+        }
+        
+        if trimmedName.lowercased() == trimmedNumber.lowercased() {
+            accountNameError = "Account name cannot be the same as account number. Please use different values."
+            accountNumberError = "Account number cannot be the same as account name. Please use different values."
+            return false
+        }
+        
+        return true
+    }
+    
+    /// Validate that the account name and number combination is not a duplicate
+    private func validateNoDuplicateNameAndNumber() -> Bool {
+        let trimmedName = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedNumber = accountNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Check for duplicate account name (case-insensitive)
+        let duplicateName = existingAccounts.first { account in
+            account.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == trimmedName.lowercased()
+        }
+        
+        if duplicateName != nil {
+            accountNameError = "An account with this name already exists. Please use a different name."
+            return false
+        }
+        
+        return true
     }
     
     /// Validate account name field
     private func validateAccountName() -> Bool {
         let trimmedName = accountName.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Store previous error to check if it was a cross-field validation error
+        let previousError = accountNameError
         
         if trimmedName.isEmpty {
             accountNameError = "Account name is required"
@@ -192,13 +251,42 @@ struct AddAccountView: View {
             return false
         }
         
-        accountNameError = nil
-        return true
+        // Validate special characters - allow alphanumeric, spaces, hyphens, underscores, periods, apostrophes
+        let allowedCharacterSet = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_'.")
+        if trimmedName.rangeOfCharacter(from: allowedCharacterSet.inverted) != nil {
+            accountNameError = "Account name can only contain letters, numbers, spaces, hyphens, underscores, periods, and apostrophes"
+            return false
+        }
+        
+        // Check for duplicate account names (case-insensitive)
+        let duplicateName = existingAccounts.first { account in
+            account.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == trimmedName.lowercased()
+        }
+        if duplicateName != nil {
+            accountNameError = "An account with this name already exists. Please use a different name."
+            return false
+        }
+        
+        // All validation passed - clear error unless it's a cross-field validation error
+        // Cross-field errors will be re-validated separately
+        if previousError != "Account name cannot be the same as account number. Please use different values." {
+            accountNameError = nil
+        }
+        
+        // Re-check cross-field validation after clearing field-specific errors
+        if !accountNumber.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            _ = validateNameNotEqualToNumber()
+        }
+        
+        return accountNameError == nil
     }
     
     /// Validate account number field
     private func validateAccountNumber() -> Bool {
         let trimmedNumber = accountNumber.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Store previous error to check if it was a cross-field validation error
+        let previousError = accountNumberError
         
         if trimmedNumber.isEmpty {
             accountNumberError = "Account number is required"
@@ -210,8 +298,24 @@ struct AddAccountView: View {
             return false
         }
         
-        accountNumberError = nil
-        return true
+        // Validate account number length (max 200 characters)
+        if trimmedNumber.count > 200 {
+            accountNumberError = "Account number must be 200 characters or less"
+            return false
+        }
+        
+        // All validation passed - clear error unless it's a cross-field validation error
+        // Cross-field errors will be re-validated separately
+        if previousError != "Account number cannot be the same as account name. Please use different values." {
+            accountNumberError = nil
+        }
+        
+        // Re-check cross-field validation after clearing field-specific errors
+        if !accountName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            _ = validateNameNotEqualToNumber()
+        }
+        
+        return accountNumberError == nil
     }
     
     /// Check if form is valid (for button state)
@@ -237,9 +341,43 @@ struct AddAccountView: View {
         }
     }
     
+    /// Fetch existing accounts to check for duplicates
+    private func fetchExistingAccounts() {
+        isLoadingAccounts = true
+        
+        APIService.getAccounts { result in
+            DispatchQueue.main.async {
+                self.isLoadingAccounts = false
+                
+                switch result {
+                case .success(let response):
+                    self.existingAccounts = response.accounts
+                case .failure:
+                    // If fetch fails, we'll still allow submission but backend will handle duplicates
+                    self.existingAccounts = []
+                }
+            }
+        }
+    }
+    
     private func handleSubmit() {
         hasAttemptedSubmit = true
         
+        // Re-fetch accounts before validation to ensure we have the latest list
+        if existingAccounts.isEmpty {
+            fetchExistingAccounts()
+            // Wait a moment for accounts to load, then re-validate
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                self.performSubmission()
+            }
+            return
+        }
+        
+        performSubmission()
+    }
+    
+    /// Perform the actual form submission
+    private func performSubmission() {
         // Validate form before submission
         guard validateForm() else {
             return
@@ -272,8 +410,14 @@ struct AddAccountView: View {
                     
                 case .failure(let error):
                     // Error - show user-friendly error message
-                    self.errorMessage = self.formatErrorMessage(error)
-                    self.showErrorAlert = true
+                    // Check if error is about duplicate account
+                    let errorMsg = self.formatErrorMessage(error)
+                    if errorMsg.contains("already exists") || errorMsg.contains("duplicate") {
+                        self.accountNameError = "An account with this name already exists. Please use a different name."
+                    } else {
+                        self.errorMessage = errorMsg
+                        self.showErrorAlert = true
+                    }
                 }
             }
         }
