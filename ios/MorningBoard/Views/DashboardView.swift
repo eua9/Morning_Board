@@ -12,21 +12,46 @@ import SwiftUI
 struct DashboardView: View {
     // MARK: - Properties
     
+    @State private var showAddAccount = false
+    
     // TODO: Add ViewModel when implemented
     // @StateObject private var viewModel = DashboardViewModel()
     
     // MARK: - Body
     
     var body: some View {
-        // Basic smoke test - Hello World display
-        VStack {
-            Text("Hello World")
-                .font(.largeTitle)
-                .fontWeight(.bold)
-                .padding()
+        NavigationView {
+            VStack {
+                // Basic smoke test - Hello World display
+                VStack {
+                    Text("Hello World")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .padding()
+                    
+                    // Add Account Button
+                    Button(action: {
+                        showAddAccount = true
+                    }) {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                            Text("Add Account")
+                        }
+                        .fontWeight(.semibold)
+                    }
+                    .buttonStyle(PrimaryButtonStyle())
+                    .padding(.horizontal, AppSpacing.m)
+                    .padding(.top, AppSpacing.l)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(.systemBackground))
+            }
+            .navigationTitle("Dashboard")
+            .navigationBarTitleDisplayMode(.large)
+            .sheet(isPresented: $showAddAccount) {
+                AddAccountView()
+            }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
     }
 }
 
