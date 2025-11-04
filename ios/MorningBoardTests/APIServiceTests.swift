@@ -132,5 +132,29 @@ final class APIServiceTests: XCTestCase {
             XCTAssertNotNil(error.errorDescription, "Error should have description: \(error)")
         }
     }
+    
+    // MARK: - Delete Account Tests
+    
+    func testDeleteAccountWithoutToken() {
+        // Test that deleteAccount fails without access token
+        let accountId = "test-account-123"
+        
+        let expectation = XCTestExpectation(description: "API call should fail without token")
+        
+        APIService.deleteAccount(accountId: accountId) { result in
+            switch result {
+            case .success:
+                XCTFail("Should not succeed without token")
+            case .failure(let error):
+                if case .unauthorized = error {
+                    expectation.fulfill()
+                } else {
+                    XCTFail("Expected unauthorized error, got: \(error)")
+                }
+            }
+        }
+        
+        wait(for: [expectation], timeout: 5.0)
+    }
 }
 

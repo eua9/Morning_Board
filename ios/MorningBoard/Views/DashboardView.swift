@@ -16,6 +16,9 @@ struct DashboardView: View {
     @State private var accounts: [BankAccount] = []
     @State private var isLoadingAccounts: Bool = false
     @State private var errorMessage: String? = nil
+    @State private var showDeleteError = false
+    @State private var showDeleteSuccess = false
+    @State private var isDeletingAccount = false
     
     // TODO: Add ViewModel when implemented
     // @StateObject private var viewModel = DashboardViewModel()
@@ -84,8 +87,13 @@ struct DashboardView: View {
                             
                             // Account Widgets
                             ForEach(accounts) { account in
-                                BankAccountWidget(account: account)
-                                    .padding(.horizontal, AppSpacing.m)
+                                BankAccountWidget(
+                                    account: account,
+                                    onDelete: { accountId in
+                                        handleDeleteAccount(accountId: accountId)
+                                    }
+                                )
+                                .padding(.horizontal, AppSpacing.m)
                             }
                         }
                         .padding(.top, AppSpacing.m)
@@ -120,7 +128,21 @@ struct DashboardView: View {
                     }
             }
             .onAppear {
+                // TEMPORARY: For QA testing only
+                         if TokenStorage.getAccessToken() == nil {
+                             TokenStorage.saveAccessToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZWU2YzlkNy02NTkxLTQ5MmQtOTBjMi1jMzBjOGVlZTMwMDEiLCJlbWFpbCI6InRlc3RAbW9ybmluZ2JvYXJkLmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NjIyODIyMDcsImV4cCI6MTc2Mjg4NzAwNywiYXVkIjoibW9ybmluZy1ib2FyZC1hcHAiLCJpc3MiOiJtb3JuaW5nLWJvYXJkLWFwaSJ9._f-Fs41NMPEgWavaLlMSMCP4tApcFEC4gaqvqSmP-Po")
+                         }
                 fetchAccounts()
+            }
+            .alert("Error", isPresented: $showDeleteError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "Failed to delete account. Please try again.")
+            }
+            .alert("Success", isPresented: $showDeleteSuccess) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Account removed successfully.")
             }
         }
     }
@@ -143,6 +165,31 @@ struct DashboardView: View {
                     errorMessage = error.localizedDescription
                     // On error, clear accounts
                     accounts = []
+                }
+            }
+        }
+    }
+    
+    /// Handle account deletion
+    /// - Parameter accountId: The account ID to delete
+    private func handleDeleteAccount(accountId: String) {
+        isDeletingAccount = true
+        errorMessage = nil
+        
+        APIService.deleteAccount(accountId: accountId) { result in
+            DispatchQueue.main.async {
+                isDeletingAccount = false
+                
+                switch result {
+                case .success:
+                    // Show success message
+                    showDeleteSuccess = true
+                    // Refresh accounts list
+                    fetchAccounts()
+                case .failure(let error):
+                    // Show error message
+                    errorMessage = error.localizedDescription
+                    showDeleteError = true
                 }
             }
         }

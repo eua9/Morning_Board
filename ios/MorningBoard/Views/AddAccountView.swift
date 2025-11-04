@@ -67,7 +67,7 @@ struct AddAccountView: View {
                                 )
                                 .onChange(of: accountName) { _ in
                                     if hasAttemptedSubmit {
-                                        validateAccountName()
+                                        _ = validateAccountName()
                                     }
                                 }
                             
@@ -95,7 +95,7 @@ struct AddAccountView: View {
                                 )
                                 .onChange(of: accountNumber) { _ in
                                     if hasAttemptedSubmit {
-                                        validateAccountNumber()
+                                        _ = validateAccountNumber()
                                     }
                                 }
                             
@@ -265,7 +265,7 @@ struct AddAccountView: View {
                 self.isLoading = false
                 
                 switch result {
-                case .success(let response):
+                case .success(_):
                     // Success - show success message and dismiss
                     self.showSuccessAlert = true
                     // The dismiss will happen when user taps OK in the alert

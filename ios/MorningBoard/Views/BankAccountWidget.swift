@@ -13,7 +13,10 @@ struct BankAccountWidget: View {
     // MARK: - Properties
     
     let account: BankAccount
+    var onDelete: ((String) -> Void)? = nil
+    
     @State private var showComingSoonAlert = false
+    @State private var showDeleteConfirmation = false
     
     // MARK: - Body
     
@@ -31,6 +34,18 @@ struct BankAccountWidget: View {
                     .foregroundColor(.primary)
                 
                 Spacer()
+                
+                // Delete Button
+                if onDelete != nil {
+                    Button(action: {
+                        showDeleteConfirmation = true
+                    }) {
+                        Image(systemName: "trash")
+                            .font(.system(size: 16))
+                            .foregroundColor(.morningBoardError)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
             }
             
             Divider()
@@ -71,6 +86,14 @@ struct BankAccountWidget: View {
             Button("OK", role: .cancel) { }
         } message: {
             Text("Detailed account view coming soon. This will show transaction history and more details.")
+        }
+        .alert("Remove Account", isPresented: $showDeleteConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Remove", role: .destructive) {
+                onDelete?(account.accountId)
+            }
+        } message: {
+            Text("Are you sure you want to remove \"\(account.name)\"? This action cannot be undone.")
         }
     }
     
