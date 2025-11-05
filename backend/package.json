@@ -13,7 +13,8 @@
     "test": "jest",
         "seed": "ts-node src/database/seed.ts",
         "seed:clear": "ts-node -e \"import('./src/database/seed').then(m => m.clearSeedData().then(() => process.exit(0)).catch(e => { console.error(e); process.exit(1); }))\"",
-        "seed:widgets": "ts-node src/database/widgetSeed.ts"
+        "seed:widgets": "ts-node src/database/widgetSeed.ts",
+        "seed:bank-accounts": "ts-node src/database/bankAccountSeed.ts"
   },
   "keywords": [
     "express",
