@@ -16,6 +16,9 @@ struct DashboardView: View {
     @State private var accounts: [BankAccount] = []
     @State private var isLoadingAccounts: Bool = false
     @State private var errorMessage: String? = nil
+    @State private var showDeleteError = false
+    @State private var showDeleteSuccess = false
+    @State private var isDeletingAccount = false
     
     // TODO: Add ViewModel when implemented
     // @StateObject private var viewModel = DashboardViewModel()
@@ -84,8 +87,13 @@ struct DashboardView: View {
                             
                             // Account Widgets
                             ForEach(accounts) { account in
-                                BankAccountWidget(account: account)
-                                    .padding(.horizontal, AppSpacing.m)
+                                BankAccountWidget(
+                                    account: account,
+                                    onDelete: { accountId in
+                                        handleDeleteAccount(accountId: accountId)
+                                    }
+                                )
+                                .padding(.horizontal, AppSpacing.m)
                             }
                         }
                         .padding(.top, AppSpacing.m)
@@ -120,7 +128,29 @@ struct DashboardView: View {
                     }
             }
             .onAppear {
+                // TEMPORARY: For QA testing only - remove after testing
+                // To get a fresh token:
+                // 1. Ensure backend server is running (npm run dev in backend/)
+                // 2. Run: curl -X POST http://localhost:3000/api/auth/login \
+                //          -H "Content-Type: application/json" \
+                //          -d '{"email":"test@morningboard.com","password":"TestPassword123!"}'
+                // 3. Copy the "token" value from the response and replace below
+                if TokenStorage.getAccessToken() == nil {
+                    // TODO: Update this token if it expires or becomes invalid
+                    // Token expires: 2025-11-11 (check JWT exp field)
+                    TokenStorage.saveAccessToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZWU2YzlkNy02NTkxLTQ5MmQtOTBjMi1jMzBjOGVlZTMwMDEiLCJlbWFpbCI6InRlc3RAbW9ybmluZ2JvYXJkLmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NjIzMTQwNTAsImV4cCI6MTc2MjkxODg1MCwiYXVkIjoibW9ybmluZy1ib2FyZC1hcHAiLCJpc3MiOiJtb3JuaW5nLWJvYXJkLWFwaSJ9.N4gAyVdIwx8NVuOEH5dVcTa7GTODUvapcRruLknZz3Q")
+                }
                 fetchAccounts()
+            }
+            .alert("Error", isPresented: $showDeleteError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "Failed to delete account. Please try again.")
+            }
+            .alert("Success", isPresented: $showDeleteSuccess) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text("Account removed successfully.")
             }
         }
     }
@@ -143,6 +173,31 @@ struct DashboardView: View {
                     errorMessage = error.localizedDescription
                     // On error, clear accounts
                     accounts = []
+                }
+            }
+        }
+    }
+    
+    /// Handle account deletion
+    /// - Parameter accountId: The account ID to delete
+    private func handleDeleteAccount(accountId: String) {
+        isDeletingAccount = true
+        errorMessage = nil
+        
+        APIService.deleteAccount(accountId: accountId) { result in
+            DispatchQueue.main.async {
+                isDeletingAccount = false
+                
+                switch result {
+                case .success:
+                    // Show success message
+                    showDeleteSuccess = true
+                    // Refresh accounts list
+                    fetchAccounts()
+                case .failure(let error):
+                    // Show error message
+                    errorMessage = error.localizedDescription
+                    showDeleteError = true
                 }
             }
         }

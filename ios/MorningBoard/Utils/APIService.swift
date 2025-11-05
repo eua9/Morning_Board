@@ -183,6 +183,81 @@ class APIService {
             }
         }.resume()
     }
+    
+    // MARK: - Delete Account
+    
+    /// Delete a bank account
+    /// - Parameters:
+    ///   - accountId: The account ID to delete
+    ///   - completion: Completion handler with result
+    static func deleteAccount(
+        accountId: String,
+        completion: @escaping (Result<Void, APIError>) -> Void
+    ) {
+        // Get access token
+        guard let accessToken = TokenStorage.getAccessToken() else {
+            completion(.failure(.unauthorized("No access token found")))
+            return
+        }
+        
+        // Build URL
+        guard let url = URL(string: "\(baseURL)/api/accounts/\(accountId)") else {
+            completion(.failure(.invalidURL))
+            return
+        }
+        
+        // Create request
+        var urlRequest = URLRequest(url: url)
+        urlRequest.httpMethod = "DELETE"
+        urlRequest.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        urlRequest.timeoutInterval = timeoutInterval
+        
+        // Perform request
+        URLSession.shared.dataTask(with: urlRequest) { data, response, error in
+            // Handle network error
+            if let error = error {
+                completion(.failure(.networkError(error.localizedDescription)))
+                return
+            }
+            
+            // Handle HTTP response
+            guard let httpResponse = response as? HTTPURLResponse else {
+                completion(.failure(.invalidResponse))
+                return
+            }
+            
+            // Handle status codes
+            switch httpResponse.statusCode {
+            case 200, 204:
+                // Success - no body expected
+                completion(.success(()))
+            case 400:
+                // Bad Request - try to decode error message
+                if let data = data,
+                   let errorMessage = try? JSONDecoder().decode(APIErrorMessage.self, from: data) {
+                    completion(.failure(.badRequest(errorMessage.error)))
+                } else {
+                    completion(.failure(.badRequest("Validation failed")))
+                }
+            case 401:
+                completion(.failure(.unauthorized("Authentication required")))
+            case 403:
+                completion(.failure(.forbidden("Access denied")))
+            case 404:
+                completion(.failure(.notFound("Account not found")))
+            case 500...599:
+                // Server error - try to decode error message
+                if let data = data,
+                   let errorMessage = try? JSONDecoder().decode(APIErrorMessage.self, from: data) {
+                    completion(.failure(.serverError(errorMessage.error)))
+                } else {
+                    completion(.failure(.serverError("Server error occurred")))
+                }
+            default:
+                completion(.failure(.unknownError("Unexpected status code: \(httpResponse.statusCode)")))
+            }
+        }.resume()
+    }
 }
 
 // MARK: - API Error Types
