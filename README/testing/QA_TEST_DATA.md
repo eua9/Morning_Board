@@ -32,8 +32,8 @@ This document provides ready-to-use test data for QA test execution. Copy and pa
 
 ### Whitespace Test
 
-- **Account Name:** ` Test Account ` (with leading/trailing spaces)
-- **Account Number:** ` 1234567890 ` (with leading/trailing spaces)
+- **Account Name:** `Test Account` (with leading/trailing spaces)
+- **Account Number:** `1234567890` (with leading/trailing spaces)
 
 ### Long Account Name (200+ characters)
 

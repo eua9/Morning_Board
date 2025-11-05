@@ -128,10 +128,18 @@ struct DashboardView: View {
                     }
             }
             .onAppear {
-                // TEMPORARY: For QA testing only
-                         if TokenStorage.getAccessToken() == nil {
-                             TokenStorage.saveAccessToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZWU2YzlkNy02NTkxLTQ5MmQtOTBjMi1jMzBjOGVlZTMwMDEiLCJlbWFpbCI6InRlc3RAbW9ybmluZ2JvYXJkLmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NjIyODIyMDcsImV4cCI6MTc2Mjg4NzAwNywiYXVkIjoibW9ybmluZy1ib2FyZC1hcHAiLCJpc3MiOiJtb3JuaW5nLWJvYXJkLWFwaSJ9._f-Fs41NMPEgWavaLlMSMCP4tApcFEC4gaqvqSmP-Po")
-                         }
+                // TEMPORARY: For QA testing only - remove after testing
+                // To get a fresh token:
+                // 1. Ensure backend server is running (npm run dev in backend/)
+                // 2. Run: curl -X POST http://localhost:3000/api/auth/login \
+                //          -H "Content-Type: application/json" \
+                //          -d '{"email":"test@morningboard.com","password":"TestPassword123!"}'
+                // 3. Copy the "token" value from the response and replace below
+                if TokenStorage.getAccessToken() == nil {
+                    // TODO: Update this token if it expires or becomes invalid
+                    // Token expires: 2025-11-11 (check JWT exp field)
+                    TokenStorage.saveAccessToken("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ZWU2YzlkNy02NTkxLTQ5MmQtOTBjMi1jMzBjOGVlZTMwMDEiLCJlbWFpbCI6InRlc3RAbW9ybmluZ2JvYXJkLmNvbSIsInVzZXJuYW1lIjoidGVzdHVzZXIiLCJpYXQiOjE3NjIzMTQwNTAsImV4cCI6MTc2MjkxODg1MCwiYXVkIjoibW9ybmluZy1ib2FyZC1hcHAiLCJpc3MiOiJtb3JuaW5nLWJvYXJkLWFwaSJ9.N4gAyVdIwx8NVuOEH5dVcTa7GTODUvapcRruLknZz3Q")
+                }
                 fetchAccounts()
             }
             .alert("Error", isPresented: $showDeleteError) {
