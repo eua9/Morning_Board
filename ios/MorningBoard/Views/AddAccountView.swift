@@ -166,10 +166,11 @@ struct AddAccountView: View {
             }
             .alert("Success", isPresented: $showSuccessAlert) {
                 Button("OK") {
+                    // Dismiss view after success - DashboardView will refresh on onDisappear
                     dismiss()
                 }
             } message: {
-                Text("Account added successfully!")
+                Text("Account added successfully! The account will appear on your dashboard.")
             }
             .onAppear {
                 fetchExistingAccounts()

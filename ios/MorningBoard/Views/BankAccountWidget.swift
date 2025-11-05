@@ -58,20 +58,10 @@ struct BankAccountWidget: View {
                     .foregroundColor(.primary)
                 
                 // Balance
-                HStack(alignment: .firstTextBaseline, spacing: AppSpacing.xs) {
-                    Text(formatBalance(account.balance))
-                        .font(AppTypography.title1)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
-                    
-                    // Placeholder indicator for dummy data
-                    if account.balance == 0.0 {
-                        Text("(Test Balance)")
-                            .font(AppTypography.caption2)
-                            .foregroundColor(.secondary)
-                            .italic()
-                    }
-                }
+                Text(formatBalance(account.balance))
+                    .font(AppTypography.title1)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
             }
         }
         .padding(AppSpacing.widgetPadding)
@@ -116,7 +106,7 @@ struct BankAccountWidget: View {
 struct BankAccountWidget_Previews: PreviewProvider {
     static var previews: some View {
         VStack(spacing: 16) {
-            // Preview with zero balance (dummy data)
+            // Preview with zero balance
             BankAccountWidget(
                 account: BankAccount(
                     accountId: "test-1",
@@ -136,6 +126,20 @@ struct BankAccountWidget_Previews: PreviewProvider {
                     createdAt: "2025-01-01T00:00:00.000Z",
                     updatedAt: "2025-01-01T00:00:00.000Z"
                 )
+            )
+            
+            // Preview with delete handler
+            BankAccountWidget(
+                account: BankAccount(
+                    accountId: "test-3",
+                    name: "Business Account",
+                    balance: 5000.00,
+                    createdAt: "2025-01-01T00:00:00.000Z",
+                    updatedAt: "2025-01-01T00:00:00.000Z"
+                ),
+                onDelete: { accountId in
+                    print("Delete account: \(accountId)")
+                }
             )
         }
         .padding()

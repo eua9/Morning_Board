@@ -124,8 +124,13 @@ struct DashboardView: View {
                 AddAccountView()
                     .onDisappear {
                         // Refresh accounts when Add Account view is dismissed
+                        // This ensures newly added accounts appear immediately
                         fetchAccounts()
                     }
+            }
+            .refreshable {
+                // Pull-to-refresh support for manual refresh
+                fetchAccounts()
             }
             .onAppear {
                 // TEMPORARY: For QA testing only - remove after testing
@@ -158,6 +163,15 @@ struct DashboardView: View {
     // MARK: - Methods
     
     /// Fetch accounts from the backend
+    /// 
+    /// This method is called:
+    /// - On dashboard appearance (onAppear)
+    /// - When AddAccountView is dismissed (onDisappear)
+    /// - After successful account deletion
+    /// - When user performs pull-to-refresh
+    /// 
+    /// The fetched accounts are immediately displayed in BankAccountWidget components
+    /// with real account data including name and balance from the backend API.
     private func fetchAccounts() {
         isLoadingAccounts = true
         errorMessage = nil
